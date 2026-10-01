@@ -9,5 +9,13 @@ public class TesteRegras {
 	 p.setCategoria(Categoria.SALGADO);
 	 System.out.println("Coxinha -> " + p.validar());
 	 
+	 Pedido ped = new Pedido (p, 10);
+	 ped.setPrecoTotal(10);
+	 ped.setProduto(p);
+	 ped.setTipo_pagamento(Pagamento.CARTÃO);
+	 ped.setStatus_pedido(Status.PREPARANDO);
+	 System.out.println("Pedido -> " + ped.validar());
+	 
+	 
 }
 }
