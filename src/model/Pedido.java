@@ -1,5 +1,6 @@
 package model;
 
+import java.util.ArrayList;
 public class Pedido {
 	
 	private Produto produto; /*fazer um array */
@@ -18,8 +19,7 @@ public class Pedido {
 		this.status_pedido = status_pedido;
 		this.tipo_pagamento = tipo_pagamento;
 	}
-		
-			Produto p = new Produto();
+		ArrayList<Produto> produtos = new ArrayList<Produto> (); // l
 	
 	//  AS REGRAS PEDIDO
 	
@@ -35,7 +35,7 @@ public class Pedido {
 			 return "Pedido inválido" ;
 			 
 		 }
-		 if(produto.isEmpty() || produto == null) {
+		 if(produtos.isEmpty() || produtos == null) {
 			 return "Pedido inválido";
 		 }
 	 return "Pedido válido";
