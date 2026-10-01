@@ -9,5 +9,11 @@ public class TesteRegras {
 	 p.setCategoria(Categoria.SALGADO);
 	 System.out.println("Coxinha -> " + p.validar());
 	 
+	 Produto b = new Produto();
+	 p.setNome("Pão de queijo");
+	 p.setPreco(-1);
+	 p.setCategoria(Categoria.SALGADO);
+	 System.out.println("Coxinha -> " + p.validar());
+	 
 }
 }
