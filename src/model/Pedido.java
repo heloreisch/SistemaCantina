@@ -12,14 +12,14 @@ public class Pedido {
 	//private LocalDateTime horario;
 	
 	
-	public Pedido(Produto produto, double precoTotal, Status status_pedido, Pagamento tipo_pagamento) {
+	public Pedido(Produto produto, double precoTotal) {
 		super();
 		this.produto = produto;
 		this.precoTotal = precoTotal;
 		this.status_pedido = status_pedido;
 		this.tipo_pagamento = tipo_pagamento;
 	}
-		ArrayList<Produto> produtos = new ArrayList<Produto> (); // l
+		ArrayList<Produto> produtos = new ArrayList<Produto> (); 
 	
 	//  AS REGRAS PEDIDO
 	
@@ -69,6 +69,14 @@ public class Pedido {
 	}
 	public void setTipo_pagamento(Pagamento tipo_pagamento) {
 		this.tipo_pagamento = tipo_pagamento;
+	}
+
+	public ArrayList<Produto> getProdutos() {
+		return produtos;
+	}
+
+	public void setProdutos(ArrayList<Produto> produtos) {
+		this.produtos = produtos;
 	}
 	
 	
