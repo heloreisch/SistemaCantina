@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS Produto (
 status_pedido varchar(40) not null,
  precoTotal DECIMAL(6,2) not null,
  tipo_pagamento varchar(40) not null,
- horario datetime (10) not null,
+ horario datetime (6) not null,
  FOREIGN KEY(id_produto) references Produto (id)
 
  );
