@@ -12,17 +12,24 @@ import java.awt.event.ActionListener;
  * Um metodo por botao, e um actionPerformed que descobre qual foi clicado.
  */
 public class ProdutoController implements ActionListener {
-	private ProdutoRepositorioBD repositorio;
 	private JanelaProduto view;
-
+	ProdutoRepositorioBD repositorio = new ProdutoRepositorioBD();
+	janela.carregarCategorias(
+		    repositorio.listarCategorias()
+		);
+	
 	public ProdutoController(ProdutoRepositorioBD repositorio, JanelaProduto view) {
 		this.repositorio = repositorio;
 		this.view = view;
 		// Um addActionListener por botao. O "this" e o proprio Controller
 		// se registrando como ouvinte.
-		this.view.getBtnCadastrar().addActionListener(this);
-		this.view.getBtnLimpar().addActionListener(this);
-		this.view.getBtnFechar().addActionListener(this);
+		this.view.getBtnIrCadastro().addActionListener(this);
+		this.view.getBtnIrLista().addActionListener(this);
+		this.view.getBtnFiltrar().addActionListener(this);
+		this.view.getBtnSalvar().addActionListener(this);
+		this.view.getCategoria().addActionListener(this);
+		this.view.getTabela();
+	
 	}
 
 	@Override

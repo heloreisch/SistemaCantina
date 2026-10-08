@@ -1,5 +1,6 @@
 package model;
 
+import view.JanelaProduto;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -91,6 +92,28 @@ public class ProdutoRepositorioBD {
 			throw new RuntimeException("Erro ao listar: " + erro.getMessage(), erro);
 		}
 		return lista;
+	}
+	public List<Categoria> listarCategorias() {
+	    String sql = "SELECT DISTINCT categoria FROM produto ORDER BY categoria";
+	    List<Categoria> categorias = new ArrayList<>();
+
+	    try (Connection con = abrir();
+	         PreparedStatement ps = con.prepareStatement(sql);
+	         ResultSet rs = ps.executeQuery()) {
+
+	        while (rs.next()) {
+	            categorias.add(
+	                Categoria.valueOf(rs.getString("categoria"))
+	            );
+	        }
+
+	    } catch (SQLException erro) {
+	        throw new RuntimeException(
+	            "Erro ao listar categorias: " + erro.getMessage(), erro
+	        );
+	    }
+
+	    return categorias;
 	}
 
 	public int contar() {
