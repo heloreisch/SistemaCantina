@@ -93,27 +93,32 @@ public class ProdutoRepositorioBD {
 		}
 		return lista;
 	}
+	
 	public List<Categoria> listarCategorias() {
-	    String sql = "SELECT DISTINCT categoria FROM produto ORDER BY categoria";
-	    List<Categoria> categorias = new ArrayList<>();
+		String sql = "SELECT COLUMN_TYPE FROM information_schema.COLUMNS "
+	               + "WHERE TABLE_SCHEMA = DATABASE() "
+	               + "AND LOWER(TABLE_NAME) = 'produto' AND COLUMN_NAME = 'categoria'";
+	    List<Categoria> lista = new ArrayList<>();
 
 	    try (Connection con = abrir();
 	         PreparedStatement ps = con.prepareStatement(sql);
 	         ResultSet rs = ps.executeQuery()) {
 
-	        while (rs.next()) {
-	            categorias.add(
-	                Categoria.valueOf(rs.getString("categoria"))
-	            );
+	        if (rs.next()) {
+	        	 String tipo = rs.getString(1);
+	             String miolo = tipo.substring(tipo.indexOf('(') + 1, tipo.lastIndexOf(')'));
+	             for (String v : miolo.split(",")) {
+	                 lista.add(Categoria.valueOf(v.replace("'", "").trim()));
 	        }
 
-	    } catch (SQLException erro) {
+	        } 
+	    }catch (SQLException erro) {
 	        throw new RuntimeException(
 	            "Erro ao listar categorias: " + erro.getMessage(), erro
 	        );
 	    }
 
-	    return categorias;
+	    return lista;
 	}
 
 	public int contar() {
@@ -140,6 +145,25 @@ public class ProdutoRepositorioBD {
 	 System.out.println("Falha: " + e.getMessage());
 	 }
 	 }
+	 public List<Produto> listarPorCategoria(Categoria categoria) {
+		    String sql = "SELECT nome, categoria, preco FROM produto WHERE categoria = ? ORDER BY nome";
+		    List<Produto> lista = new ArrayList<>();
+		    try (Connection con = abrir(); PreparedStatement ps = con.prepareStatement(sql)) {
+		        ps.setString(1, categoria.name());
+		        try (ResultSet rs = ps.executeQuery()) {
+		            while (rs.next()) {
+		                Produto p = new Produto();
+		                p.setNome(rs.getString("nome"));
+		                p.setCategoria(Categoria.valueOf(rs.getString("categoria")));
+		                p.setPreco(rs.getDouble("preco"));
+		                lista.add(p);
+		            }
+		        }
+		    } catch (SQLException erro) {
+		        throw new RuntimeException("Erro ao listar: " + erro.getMessage(), erro);
+		    }
+		    return lista;
+		}
 	}
 
 

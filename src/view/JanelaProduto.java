@@ -2,8 +2,10 @@ package view;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;
 
 import model.Categoria;
+import model.Produto;
 
 /**
  * VIEW - a tela. PASSO 7 do roteiro.
@@ -27,17 +29,18 @@ public class JanelaProduto extends JFrame {
 	private JButton btnIrCadastro = new JButton("Cadastro");
 	private JButton btnIrLista = new JButton("Consulta");
 
-	// Cartão 1
-	private JTextField txtNome;
-	private JTextField txtPreco;
-	private JButton btnSalvar = new JButton("Salvar");
+	// Cartão 1 (cadastro)
+		private JTextField txtNome = new JTextField(20);
+		private JTextField txtPreco = new JTextField(10);
+		private JComboBox<Categoria> cbCadastro = new JComboBox<>();
+		private JButton btnSalvar = new JButton("Salvar");
 
-	// cartao 2
-	private JComboBox<Categoria> comboCategoria = new JComboBox<>();
-	private JButton btnFiltrar = new JButton("Filtrar");
-	private ProdutoTableModel modelo = new ProdutoTableModel();
-	private JTable tabela = new JTable(modelo);
-	private JLabel lblStatus = new JLabel(" Pronto.");
+		// Cartão 2 (consulta)
+		private JComboBox<Object> cbFiltro = new JComboBox<>();
+		private JButton btnFiltrar = new JButton("Filtrar");
+		private ProdutoTableModel modelo = new ProdutoTableModel();
+		private JTable tabela = new JTable(modelo);
+		private JLabel lblStatus = new JLabel(" Pronto.");
 
 	// Os botoes tambem sao atributos: o Controller precisa alcanca-los
 	// para pendurar o ouvinte.
@@ -61,13 +64,7 @@ public class JanelaProduto extends JFrame {
 		add(lblStatus, BorderLayout.SOUTH);
 	}
 
-	public void carregarCategorias(List<Categoria> categorias) {
-	    comboCategoria.removeAllItems();
-
-	    for (Categoria categoria : categorias) {
-	        comboCategoria.addItem(categoria);
-	    }
-	}
+	
 	
 	private JPanel criarBarraNavegacao() {
 		JPanel barra = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
@@ -82,10 +79,13 @@ public class JanelaProduto extends JFrame {
 		JPanel p = new JPanel(new GridBagLayout());
 		p.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		GridBagConstraints g = new GridBagConstraints();
+		
 		g.insets = new Insets(5, 6, 5, 6);
 		g.fill = GridBagConstraints.HORIZONTAL;
+		
 		String[] rotulos = { "Nome:", "Categoria:", "Preço (R$):"};
-		JComponent[] campos = { txtNome, txtPreco};
+		JComponent[] campos = { txtNome, cbCadastro, txtPreco};
+		
 		for (int i = 0; i < rotulos.length; i++) {
 			g.gridx = 0;
 			g.gridy = i;
@@ -96,6 +96,7 @@ public class JanelaProduto extends JFrame {
 			g.weightx = 1;
 			p.add(campos[i], g);
 		}
+		
 		JPanel botoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
 		botoes.add(btnSalvar);
 		g.gridx = 0;
@@ -117,8 +118,9 @@ public class JanelaProduto extends JFrame {
 	 JPanel p = new JPanel(new BorderLayout(6, 6));
 	 p.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
 	 JPanel filtro = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+	 filtro.add(new JLabel("Categoria:"));
 	 filtro.add(new JLabel("Especie:"));
-	 filtro.add(cbCategoria);
+	 filtro.add(cbFiltro);
 	 filtro.add(btnFiltrar);
 	 p.add(filtro, BorderLayout.NORTH);
 	 tabela.setRowHeight(22);
@@ -132,33 +134,67 @@ public class JanelaProduto extends JFrame {
 	 public JButton getBtnIrLista() { return btnIrLista; }
 	 public JButton getBtnFiltrar() { return btnFiltrar; }
 	 public JButton getBtnSalvar() { return btnSalvar; }
-	 public JComboBox<String> getCategoria() { return cbCategoria; }
+	 public JTextField getTxtNome() { return txtNome; }
+	 public JTextField getTxtPreco() { return txtPreco; }
 	 public JTable getTabela() { return tabela; }
 
+	 /** Categoria escolhida no cadastro (já como enum). */
+		public Categoria getCategoriaCadastro() {
+			return (Categoria) cbCadastro.getSelectedItem();
+		}
+		
+		/** Categoria do filtro, ou null se estiver em "(todas)". */
+		public Categoria getCategoriaFiltro() {
+			Object sel = cbFiltro.getSelectedItem();
+			return (sel instanceof Categoria) ? (Categoria) sel : null;
+		}
+		
 	// ---- Grupo 2: capacidades da tela ---------------------------------
 	 /** Troca o cartao visivel. O nome tem que ser o mesmo do add(). */
 	 public void mostrarCartao(String nome) {
 	 cards.show(painelCards, nome);
 	 }
 	 /** Recebe a lista pronta e manda o modelo se redesenhar. */
-	 public void carregarTabela(java.util.List<model.Produto> lista) {
+	 public void carregarTabela(List<Produto> lista) {
 	 modelo.setDados(lista);
 	 }
-	 /** Preenche o combo com o que veio do banco. */
-	 public void carregarCategorias(java.util.List<String> categoria) {
-	 cbCategoria.removeAllItems();
-	 cbCategoria.addItem("(todas)");
-	 for (String e : categoria) {
-	 cbCategoria.addItem(e);
-	 }
-	 }
-	 public String getEspecieSelecionada() {
-	 Object sel = cbCategoria.getSelectedItem();
-	 return (sel == null) ? "" : sel.toString();
-	 }
-	 public void mostrarStatus(String texto) {
-	 lblStatus.setText(" " + texto);
-	 }
+	 
+	 public void carregarCadastro(List<Categoria> categorias) {
+		    cbCadastro.removeAllItems();
+		    for (Categoria c : categorias) {
+		        cbCadastro.addItem(c);
+		    }
+		}
+	 
+	 public void carregarFiltro(List<Categoria> categorias) {
+			cbFiltro.removeAllItems();
+			cbFiltro.addItem("(todas)");
+			for (Categoria c : categorias) {
+				cbFiltro.addItem(c);
+			}
+		}
+	 
+	 public void limparCampos() {
+			txtNome.setText("");
+			txtPreco.setText("");
+			if (cbCadastro.getItemCount() > 0) {
+				cbCadastro.setSelectedIndex(0);
+			}
+			txtNome.requestFocus();
+		}
+
+	 public void mostrarErro(String msg) {
+			JOptionPane.showMessageDialog(this, msg, "Erro", JOptionPane.ERROR_MESSAGE);
+		}
+
+		public void mostrarMensagem(String msg) {
+			JOptionPane.showMessageDialog(this, msg);
+		}
+
+		public void mostrarStatus(String texto) {
+			lblStatus.setText(" " + texto);
+		}
 	}
+	
 
 	

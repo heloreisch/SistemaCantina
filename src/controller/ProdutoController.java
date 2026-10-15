@@ -1,79 +1,93 @@
 package controller;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+
+import model.Categoria;
 import model.Produto;
 import model.ProdutoRepositorioBD;
 import view.JanelaProduto;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
 /**
  * CONTROLLER - PASSO 8 do roteiro.
  *
  * Um metodo por botao, e um actionPerformed que descobre qual foi clicado.
  */
 public class ProdutoController implements ActionListener {
-	private JanelaProduto view;
-	ProdutoRepositorioBD repositorio = new ProdutoRepositorioBD();
-	janela.carregarCategorias(
-		    repositorio.listarCategorias()
-		);
+	//final não muda
+	private final JanelaProduto view;
+	private final ProdutoRepositorioBD repositorio;
 	
 	public ProdutoController(ProdutoRepositorioBD repositorio, JanelaProduto view) {
+		
 		this.repositorio = repositorio;
 		this.view = view;
+		
+		List<Categoria> categorias = repositorio.listarCategorias();
+		this.view.carregarCadastro(categorias);
+		this.view.carregarFiltro(categorias);
+		
 		// Um addActionListener por botao. O "this" e o proprio Controller
 		// se registrando como ouvinte.
 		this.view.getBtnIrCadastro().addActionListener(this);
 		this.view.getBtnIrLista().addActionListener(this);
 		this.view.getBtnFiltrar().addActionListener(this);
 		this.view.getBtnSalvar().addActionListener(this);
-		this.view.getCategoria().addActionListener(this);
-		this.view.getTabela();
+		// Não registre ouvinte nos combos.
+		
+		
 	
 	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// == e nao equals: a pergunta e "e exatamente aquele objeto?".
-		if (e.getSource() == this.view.getBtnCadastrar()) {
-			cadastrar();
-		} else if (e.getSource() == this.view.getBtnLimpar()) {
-			this.view.limparCampos();
-		} else if (e.getSource() == this.view.getBtnFechar()) {
-			this.view.fechar();
+		Object src = e.getSource();
+		if (src == view.getBtnIrCadastro()) {
+			view.mostrarCartao("cadastro");
+		} else if (src == view.getBtnIrLista()) {
+			view.mostrarCartao("lista");
+			filtrar();
+		} else if (src == view.getBtnFiltrar()) {
+			filtrar();
+		} else if (src == view.getBtnSalvar()) {
+			salvar();
 		}
 	}
+	
+	private void filtrar() {
+		Categoria c = view.getCategoriaFiltro();
+		List<Produto> lista = (c == null)
+				? repositorio.listarTodos()
+				: repositorio.listarPorCategoria(c);
+		view.carregarTabela(lista);
+		view.mostrarStatus(lista.size() + " produto(s).");
+	}
 
-	private void cadastrar() {
-		// CONVERSAO: tudo que vem de um JTextField e TEXTO, mesmo que
-		// pareca numero. Converter e trabalho de quem faz fronteira com a
-		// tela - por isso este try/catch fica aqui, e nao no Model.
-		// O replace resolve o detalhe brasileiro: digitamos 12,5 e o Java
-		// so entende 12.5.
+	private void salvar() {
 		double preco;
 		try {
-			preco = Double.parseDouble(this.view.getTxtPreco().getText().trim().replace(",", "."));
+			preco = Double.parseDouble(view.getTxtPreco().getText().trim().replace(",", "."));
 		} catch (NumberFormatException erro) {
-			this.view.mostrarErro("O preço deve ser um numero.");
+			view.mostrarErro("O preço deve ser um número.");
 			return;
 		}
-//Objeto NOVO a cada cadastro: reaproveitar um unico faria o
-// segundo sobrescrever o primeiro.
-		Produto produto = new Produto();
-		produto.setNome(this.view.getTxtNome().getText());
-		produto.setCategoria(this.view.getCategoria());
-		produto.setPreco(preco);
+		Produto p = new Produto();
+		p.setNome(view.getTxtNome().getText());
+		p.setCategoria(view.getCategoriaCadastro());
+		p.setPreco(preco);
 		try {
-			this.repositorio.selecionar(produto);
+			repositorio.selecionar(p);
 		} catch (IllegalArgumentException erro) {
-			this.view.mostrarErro(erro.getMessage());
-			return; // sem o return, a mensagem de sucesso viria depois
+			view.mostrarErro(erro.getMessage());
+			return;
 		}
-		this.view.mostrarMensagem("Cadastrado. Total: " + this.repositorio.contar());
-		this.view.limparCampos();
+		view.mostrarMensagem("Cadastrado. Total: " + repositorio.contar());
+		view.limparCampos();
 	}
 
 	public void iniciarTela() {
-		this.view.setVisible(true);
+		view.setVisible(true);
 	}
+	
 }
