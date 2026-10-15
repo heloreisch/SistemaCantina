@@ -195,6 +195,81 @@ public class PedidoRepositorioBD {
         return 0;
     }
     
+    
+    public void actionPerformed(ActionEvent e) {
+    	if (recarregando) {
+    	return; // o combo dispara evento enquanto e preenchido
+    	}
+    	Object origem = e.getSource();
+    	if (origem == this.viewp.getBtnNovo()) {
+    	this.view.limparSelecao();
+    	entrarEdicao(null);
+    	} else if (origem == this.viewp.getBtnEditar()) {
+    	entrarEdicao(this.viewp.getAnimalSelecionado());
+    	} else if (origem == this.view.getBtnExcluir()) {
+    	excluir();
+    	} else if (origem == this.view.getBtnSalvar()) {
+    	salvar();
+    	} else if (origem == this.view.getBtnCancelar()) {
+    	this.editando = false;
+    	atualizarDetalhe();
+    	} else if (origem == this.view.getCbEspecie()) {
+    	atualizarTela(idSelecionado());
+    	}
+    	}
+    	private void entrarEdicao(Animal a) {
+    	this.editando = true;
+    	this.view.editarAnimal(a);
+    	this.view.atualizarBotoes(a != null, true);
+    	}
+    	private void salvar() {
+    	try {
+    	Animal a = this.view.lerFormulario();
+    	if (a.getNome().isEmpty()) {
+    	this.view.mostrarStatus("Informe o nome.");
+    	return;
+    	}
+    	this.bd.salvar(a);
+    	this.editando = false;
+    	atualizarTela(a.getId());
+    	this.view.mostrarStatus("Salvo: " + a.getNome());
+    	} catch (NumberFormatException ex) {
+    	this.view.mostrarStatus("Peso invalido. Use numeros, ex.: 4.5");
+    	}
+    	}
+    	
+    	private void excluir() {
+    	Animal a = this.view.getAnimalSelecionado();
+    	if (a != null && this.view.confirmar("Excluir " + a.getNome() + "?")) {
+    	this.bd.excluir(a.getId());
+    	atualizarTela(0);
+    	public void salvar(Animal a) throws SQLException {
+    		boolean novo = (a.getId() == 0);
+    		String sql = novo
+    		? "INSERT INTO animal (nome, especie, peso, dono) VALUES (?, ?, ?, ?)"
+    		: "UPDATE animal SET nome = ?, especie = ?, peso = ?, dono = ? WHERE id = ?";
+    		try (Connection con = abrir();
+    		PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+    		ps.setString(1, ped.getNome());
+    		ps.setString(2, ped.getEspecie());
+    		ps.setDouble(3, ped.getPeso());
+    		ps.setString(4, ped.getDono());
+    		if (novo) {
+    		ps.executeUpdate();
+    		try (ResultSet rs = ps.getGeneratedKeys()) {
+    		if (rs.next()) {
+    		a.setId(rs.getInt(1)); // devolve o id novo ao objeto
+    		}
+    		}
+    		} else {
+    		ps.setInt(5, a.getId());
+    		ps.executeUpdate();
+    		}
+    		}
+    		}
+
+
+    
     /** Teste de ambiente: rode ANTES de depurar qualquer botao. */
     public static void main(String[] args) {
     		PedidoRepositorioBD bd = new PedidoRepositorioBD();
