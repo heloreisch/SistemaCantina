@@ -1,15 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-21">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="src" path="src"/>
-<<<<<<< HEAD
-	<classpathentry exported="true" kind="lib" path="C:/Users/aluno/Desktop/SistemaCantina/Cópia de mysql-connector-j-26.7.0.jar"/>
-=======
-	<classpathentry kind="lib" path="C:/Users/aluno/SistemaCantina/Cópia de mysql-connector-j-26.7.0.jar"/>
->>>>>>> 3759218dc396ffb603640125f06774f23f395685
+	<classpathentry exported="true" kind="lib" path="D:/Usuário/Downloads/Cópia de mysql-connector-j-26.7.0 (1).jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

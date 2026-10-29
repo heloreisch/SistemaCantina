@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS Produto (
  );
  
  create table if not exists Pedido (
- id int primary key auto_increment,
+ id_pedido int primary key auto_increment,
  id_produto int not null,
   status_pedio ENUM('PEDIDO_RECEBIDO','PREPARANDO','FINALIZADO','PAGO', 'ENTREGUE','CANCELADO'),
  precoTotal DECIMAL(6,2) not null,

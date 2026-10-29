@@ -19,7 +19,7 @@ public class Pedido {
 
 	
     private ArrayList<Produto> produtos;
-    private int idPedido;
+    private int id_pedido;
     private double precoTotal;
     private Status status_pedido;
     private Pagamento tipo_pagamento;
@@ -112,11 +112,11 @@ public class Pedido {
     }
 
 	public int getIdPedido() {
-		return idPedido;
+		return id_pedido;
 	}
 
 	public void setIdPedido(int idPedido) {
-		this.idPedido = idPedido;
+		this.id_pedido = idPedido;
 	}
     
 }

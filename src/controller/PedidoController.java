@@ -1,202 +1,203 @@
-
 package controller;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
-import model.Pedido;
+import javax.swing.Timer;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
 import model.PedidoRepositorioBD;
-import model.Status;
-import model.Pagamento;
+import model.Pedido;
+import model.Produto;
 import view.JanelaPedido;
 
 /**
- * CONTROLLER - PASSO 8 do roteiro.
- *
- * Um metodo por botao, e um actionPerformed que descobre qual foi clicado.
+ * CONTROLLER - liga a tela (View) ao repositorio (Model).
+ * Regra de ouro: todo evento que muda dados termina em atualizarTela().
  */
+public class PedidoController implements ActionListener, ListSelectionListener {
+    private final JanelaPedido viewp;
+    private final PedidoRepositorioBD repositoriop;
 
-public class PedidoController implements ActionListener {
+    private boolean recarregando = false;   // true enquanto a tela esta sendo repovoada
+    private boolean editando = false;       // true enquanto o formulario esta aberto
+    private Pedido emEdicao = null;         // pedido original (null = pedido novo)
+    private final Timer esperaBusca;        // espera o usuario parar de digitar
 
-    private PedidoRepositorioBD repositoriop;
-    private JanelaPedido viewp;
-
-    public PedidoController(PedidoRepositorioBD repositoriop,JanelaPedido viewp) {
-
-        this.repositoriop = repositoriop;
+    public PedidoController(PedidoRepositorioBD repositoriop, JanelaPedido viewp) {
         this.viewp = viewp;
+        this.repositoriop = repositoriop;
 
-     // Um addActionListener por botao. O "this" e o proprio Controller
-     // se regi
-        this.viewp.getBtnCadastrar().addActionListener(this);
-        this.viewp.getBtnLimpar().addActionListener(this);
-        this.viewp.getBtnFechar().addActionListener(this);
+        this.viewp.getBtnNovo().addActionListener(this);
         this.viewp.getBtnEditar().addActionListener(this);
+        this.viewp.getBtnExcluir().addActionListener(this);
+        this.viewp.getBtnSalvar().addActionListener(this);
+        this.viewp.getBtnCancelar().addActionListener(this);
+        this.viewp.getCbFiltroStatus().addActionListener(this);
+        this.viewp.getBtnAdicionar().addActionListener(this);
+        this.viewp.getBtnRemoverItem().addActionListener(this);
         this.viewp.getTabela().getSelectionModel().addListSelectionListener(this);
+
+        // busca "ao digitar": cada tecla reinicia o relogio
+        this.esperaBusca = new Timer(300, e -> atualizarTela(idSelecionado()));
+        this.esperaBusca.setRepeats(false);
+        this.viewp.getTxtBusca().getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { buscaMudou(); }
+            public void removeUpdate(DocumentEvent e) { buscaMudou(); }
+            public void changedUpdate(DocumentEvent e) { buscaMudou(); }
+        });
+
+        atualizarTela(0);
+    }
+
+    public void iniciarTela() { this.viewp.setVisible(true); }
+
+    private void buscaMudou() {
+        if (!recarregando) esperaBusca.restart();
+    }
+
+    @Override
+    public void valueChanged(ListSelectionEvent e) {
+        if (e.getValueIsAdjusting() || recarregando || editando) return;
+        atualizarDetalhe();
+    }
+
+    private void atualizarDetalhe() {
+        Pedido ped = this.viewp.getPedidoSelecionado();
+        if (ped == null) this.viewp.mostrarVazio();
+        else             this.viewp.mostrarDetalhe(ped);
+        this.viewp.atualizarBotoes(ped != null, this.editando);
+    }
+
+    private int idSelecionado() {
+        Pedido ped = this.viewp.getPedidoSelecionado();
+        return (ped == null) ? 0 : ped.getIdPedido();
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-    	// == e nao equals: a pergunta e "e exatamente aquele objeto?".
-        if (e.getSource() == this.viewp.getBtnCadastrar()) {
-            cadastrar();
+        if (recarregando) return;
 
-        } else if (e.getSource() == this.viewp.getBtnLimpar()) {
-            this.viewp.limparCampos();
-
-        } else if (e.getSource() == this.viewp.getBtnFechar()) {
-            this.viewp.fechar();
+        Object origem = e.getSource();
+        if (origem == this.viewp.getBtnNovo()) {
+            this.viewp.limparSelecao();
+            entrarEdicao(null);
+        } else if (origem == this.viewp.getBtnEditar()) {
+            entrarEdicao(this.viewp.getPedidoSelecionado());
+        } else if (origem == this.viewp.getBtnExcluir()) {
+            excluir();
+        } else if (origem == this.viewp.getBtnSalvar()) {
+            salvar();
+        } else if (origem == this.viewp.getBtnCancelar()) {
+            this.editando = false;
+            this.emEdicao = null;
+            atualizarDetalhe();
+        } else if (origem == this.viewp.getCbFiltroStatus()) {
+            atualizarTela(idSelecionado());
+        } else if (origem == this.viewp.getBtnAdicionar()) {
+            adicionarItem();
+        } else if (origem == this.viewp.getBtnRemoverItem()) {
+            removerItem();
         }
     }
 
-    private void cadastrar() {
-    	// CONVERSAO: tudo que vem de um JTextField e TEXTO, mesmo que
-    	 // pareca numero. Converter e trabalho de quem faz fronteira com a
-    	 // tela - por isso este try/catch fica aqui, e nao no Model.
-    	 // O replace resolve o detalhe brasileiro: digitamos 12,5 e o Java
-    	 // so entende 12
-
-        Pedido pedido = new Pedido();
-
-        // Converter o texto do preço para double
-        double precoTotal;
-
-        try {
-            precoTotal = Double.parseDouble(
-                this.viewp.getTxtPrecoTotal().getText().trim().replace(",", ".")
-            );
-
-        } catch (NumberFormatException erro) {
-            this.viewp.mostrarErro( "O preço total deve ser um número válido.");
-            return;
-     }
-        pedido.setPrecoTotal(precoTotal);
-        pedido.setStatus_pedido(
-            (Status) this.viewp.getCbStatus().getSelectedItem()
-        );
-
-        pedido.setTipo_pagamento((Pagamento) this.viewp.getCbPagamento().getSelectedItem()
-        );
-
-        try {
-            this.repositoriop.salvar(pedido);
-
-        } catch (IllegalArgumentException erro) {
-            this.viewp.mostrarErro(erro.getMessage());
+    private void adicionarItem() {
+        Produto prod = this.viewp.getProdutoSelecionado();
+        if (prod == null) {
+            this.viewp.mostrarErro("Escolha um produto no combo.");
             return;
         }
-
-        this.viewp.mostrarMensagem( "Pedido cadastrado! Total de pedidos: " + this.repositoriop.contar());
-        this.viewp.limparCampos();
+        if (!this.viewp.adicionarItem(prod)) {
+            this.viewp.mostrarErro("Esse produto já está no pedido.");
+            return;
+        }
+        this.viewp.setPrecoTotal(this.viewp.somarItens()); // total = soma dos itens (ainda editavel)
     }
 
-    public void iniciarTela() {
-        this.viewp.setVisible(true);
+    private void removerItem() {
+        if (!this.viewp.removerItemSelecionado()) {
+            this.viewp.mostrarErro("Selecione um item da lista para remover.");
+            return;
+        }
+        this.viewp.setPrecoTotal(this.viewp.somarItens());
     }
-    		public void valueChanged(ListSelectionEvent e) {
-    			if (e.getValueIsAdjusting() || recarregando || editando) {
-    							return;
-    			}
-    				atualizarDetalhe();
-    	}
-    			private void atualizarDetalhe() {
-    				Pedido ped = this.viewp.getPedidoSelecionado();
-    					if (ped == null) {
-    							this.viewp.mostrarVazio();
-    					} else {
-    							this.viewp.mostrarDetalhe(ped);
-    					}
-    						this.viewp.atualizarBotoes(ped != null, this.editando);
-    				}
-    						private int idSelecionado() {
-    							Pedido ped = this.viewp.getPedidoSelecionado();
-    								return (ped == null) ? 0 : ped.getId();
-    	}
-    						public Pedido getAnimalSelecionado() {
-    							int linhaTela = tabela.getSelectedRow();
-    							if (linhaTela < 0) {
-    							return null;
-    							}
-    							int linhaModelo = tabela.convertRowIndexToModel(linhaTela);
-    							return modelo.getPedido(linhaModelo);
-    							}
-    						
-    						this.esperaBusca = new javax.swing.Timer(300, e -> atualizarTela(idSelecionado()));
-    						this.esperaBusca.setRepeats(false);
-    						this.view.getTxtBusca().getDocument().addDocumentListener(new DocumentListener() {
-    						public void insertUpdate(DocumentEvent e) { buscaMudou(); }
-    						public void removeUpdate(DocumentEvent e) { buscaMudou(); }
-    						public void changedUpdate(DocumentEvent e) { buscaMudou(); }
-    						});
-    						atualizarTela(0);
-    						}
-    						private void buscaMudou() {
-    						if (!recarregando) {
-    						esperaBusca.restart();
-    						}
-    						}
-    						public List<Animal> listarFiltrado(String especie, String trecho) {
-    							boolean todas = (especie == null || especie.isEmpty() || especie.equals("(todas)"));
-    							String sql = "SELECT id, nome, especie, peso, dono FROM animal WHERE nome LIKE ? "
-    							+ (todas ? "" : "AND especie = ? ") // trecho FIXO, nao vem do usuario
-    							+ "ORDER BY nome";
-    							List<Animal> lista = new ArrayList<>();
-    							try (Connection con = abrir();
-    							PreparedStatement ps = con.prepareStatement(sql)) {
-    							ps.setString(1, "%" + trecho + "%");
-    							if (!todas) {
-    							ps.setString(2, especie);
-    							}
-    							try (ResultSet rs = ps.executeQuery()) {
-    							while (rs.next()) {
-    							lista.add(new Animal(rs.getInt("id"), rs.getString("nome"),
-    							rs.getString("especie"), rs.getDouble("peso"), rs.getString("dono")));
-    							}
-    							}
-    							} catch (SQLException ex) {
-    							throw new RuntimeException(ex);
-    							}
-    							return lista;
-    							/** O UNICO metodo que repovoa a tela. Todo evento que muda dados termina aqui. */
-    							private void atualizarTela(int idParaSelecionar) {
-    							this.recarregando = true;
-    							try {
-    							String especie = this.view.getEspecieSelecionada();
-    							this.view.carregarEspecies(this.bd.listarEspecies(), especie);
-    							List<Animal> lista = this.bd.listarFiltrado(
-    							this.view.getEspecieSelecionada(), this.view.getBusca());
-    							this.view.carregarTabela(lista);
-    							this.view.carregarResumo(this.bd.contarPorEspecie());
-    							this.view.selecionarPorId(idParaSelecionar);
-    							this.view.mostrarStatus(lista.size() + " registro(s) em exibicao.");
-    							} finally {
-    							this.recarregando = false; // finally: libera mesmo se der excecao
-    							}
-    							atualizarDetalhe();
-    							}
-    							
-    							/** Preenche o combo e devolve o usuario para a opcao que ele tinha escolhido. */
-    							public void carregarEspecies(List<String> especies, String manter) {
-    							cbEspecie.removeAllItems();
-    							cbEspecie.addItem("(todas)");
-    							for (String e : especies) {
-    							cbEspecie.addItem(e);
-    							}
-    							if (manter != null) {
-    							cbEspecie.setSelectedItem(manter);
-    							}
-    							}
-    							/** Depois de recarregar, a selecao some. Esta rotina a devolve, procurando pelo id. */
-    							public void selecionarPorId(int id) {
-    							for (int i = 0; i < modelo.getRowCount(); i++) {
-    							if (modelo.getAnimal(i).getId() == id) {
-    							int linhaTela = tabela.convertRowIndexToView(i);
-    							tabela.setRowSelectionInterval(linhaTela, linhaTela);
-    							tabela.scrollRectToVisible(tabela.getCellRect(linhaTela, 0, true));
-    							return;
-    							}
-    							}
-    							tabela.clearSelection();
-    							}
 
+    private void entrarEdicao(Pedido ped) {
+        this.editando = true;
+        this.emEdicao = ped;
+        // recarrega os produtos (podem ter sido cadastrados na outra tela).
+        // recarregando=true evita que o combo dispare o preenchimento do preco.
+        this.recarregando = true;
+        try {
+            this.viewp.carregarProdutos(this.repositoriop.listarProdutos());
+            this.viewp.editarPedido(ped);
+        } finally {
+            this.recarregando = false;
+        }
+        this.viewp.atualizarBotoes(ped != null, true);
+    }
+
+    private void salvar() {
+        Pedido ped;
+        try {
+            // CONVERSAO: JTextField sempre devolve texto; a fronteira com a tela e quem converte.
+            ped = this.viewp.lerFormulario();
+        } catch (NumberFormatException ex) {
+            this.viewp.mostrarErro("O preço total deve ser um número válido. Ex.: 12,50");
+            return;
+        }
+        // Os produtos vem da lista de itens do formulario.
+        ArrayList<Produto> itens = this.viewp.getItens();
+        if (itens.isEmpty()) {
+            this.viewp.mostrarErro("Adicione pelo menos um produto ao pedido.");
+            return;
+        }
+        ped.setProdutos(itens);
+
+        try {
+            if (ped.getIdPedido() == 0) this.repositoriop.salvar(ped);
+            else                        this.repositoriop.alterar(ped);
+        } catch (IllegalArgumentException ex) {
+            this.viewp.mostrarErro(ex.getMessage());
+            return;
+        }
+        this.editando = false;
+        this.emEdicao = null;
+        atualizarTela(ped.getIdPedido());
+        this.viewp.mostrarStatus("Salvo: pedido " + ped.getIdPedido());
+    }
+
+    private void excluir() {
+        Pedido ped = this.viewp.getPedidoSelecionado();
+        if (ped != null && this.viewp.confirmar("Excluir o pedido " + ped.getIdPedido() + "?")) {
+            try {
+                this.repositoriop.excluir(ped.getIdPedido());
+            } catch (IllegalArgumentException ex) {
+                this.viewp.mostrarErro(ex.getMessage());
+                return;
+            }
+            atualizarTela(0);
+        }
+    }
+
+    /** O UNICO metodo que repovoa a tela. */
+    private void atualizarTela(int idParaSelecionar) {
+        this.recarregando = true;
+        try {
+            List<Pedido> lista = this.repositoriop.listarFiltrado(
+                    this.viewp.getStatusSelecionado(), this.viewp.getBusca());
+            this.viewp.carregarTabela(lista);
+            this.viewp.carregarResumo(this.repositoriop.contarPorStatus());
+            this.viewp.selecionarPorId(idParaSelecionar);
+            this.viewp.mostrarStatus(lista.size() + " registro(s) em exibicao.");
+        } finally {
+            this.recarregando = false;
+        }
+        atualizarDetalhe();
+    }
 }

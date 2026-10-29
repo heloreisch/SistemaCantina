@@ -1,5 +1,7 @@
 package model;
 
+import java.util.ArrayList;
+
 public class TesteRegras {
 	public static void main(String[] args) {
 		
@@ -9,12 +11,15 @@ public class TesteRegras {
 	 p.setCategoria(Categoria.SALGADO);
 	 System.out.println("Coxinha -> " + p.validar());
 	 
-	 Pedido ped = new Pedido (p, 10);
-	 ped.setPrecoTotal(10);
-	 ped.setProduto(p);
-	 ped.setTipo_pagamento(Pagamento.CARTÃO);
-	 ped.setStatus_pedido(Status.PREPARANDO);
-	 System.out.println("Pedido -> " + ped.validar());
+     Pedido ped = new Pedido();
+     ArrayList<Produto> itens = new ArrayList<>();
+     itens.add(p);
+     ped.setProdutos(itens);
+     ped.setPrecoTotal(10);
+     ped.setTipo_pagamento(Pagamento.PIX);
+     ped.setStatus_pedido(Status.PREPARANDO);
+     System.out.println("Pedido -> " + ped.validar());
+
 	 
 	 Produto b = new Produto();
 	 p.setNome("Pão de queijo");
