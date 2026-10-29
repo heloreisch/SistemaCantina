@@ -72,7 +72,7 @@ public class ProdutoRepositorioBD {
 	}
 
 	public List<Produto> listarTodos() {
-		String sql = "SELECT nome, categoria, preco FROM produto ORDER BY nome";
+		String sql = "SELECT nome, categoria, preco, id FROM produto ORDER BY nome";
 		List<Produto> lista = new ArrayList<>();
 		try (Connection con = abrir();
 				PreparedStatement ps = con.prepareStatement(sql);

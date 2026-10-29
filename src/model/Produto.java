@@ -7,8 +7,15 @@ public class Produto {
 			private String nome;
 			private double preco;
 			private Categoria categoria;
+			private int id_produto;
 			
 			
+			public Produto(String nome, double preco, Categoria categoria) {
+				super();
+				this.nome = nome;
+				this.preco = preco;
+				this.categoria = categoria;
+			}
 			/* REGRAS
 			 *  - NOME: não pode conter caracteres especiais
 			 *  - CATEGORIA: deve estar disponível no horário específico - tratamento feito na hora do pedido
