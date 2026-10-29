@@ -1,6 +1,7 @@
 package view;
 
 import java.awt.BorderLayout;
+
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -31,6 +32,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import model.Pagamento;
@@ -38,6 +40,13 @@ import model.Pedido;
 import model.Produto;
 import model.Status;
 import view.PedidoTableModel;
+// importar para logo
+import java.awt.BorderLayout;
+import java.awt.Image;
+import java.net.URL;
+import javax.swing.SwingConstants;
+import javax.swing.ImageIcon;
+
 
 /** VIEW - so desenha. Nao conhece banco nem regra de negocio. */
 public class JanelaPedido extends JFrame {
@@ -77,6 +86,12 @@ public class JanelaPedido extends JFrame {
     // SOUTH
     private JLabel lblBarra = new JLabel(" Pronto.");
 
+    
+	 /*  setTitle("Cantina");
+	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    setBounds(100, 100, 420, 450);
+	    setLocationRelativeTo(null); */
+
     public JanelaPedido() {
         setTitle("Sistema de Cantina - Pedidos");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -98,15 +113,41 @@ public class JanelaPedido extends JFrame {
                     setText("(escolha um produto)");
                 }
                 return this;
+                
             }
+            
         });
+        
+        
+        ImageIcon icone = carregarIcone("/img/icone.png", 32, 32);
+        if (icone != null) {
+        setIconImage(icone.getImage());
+        }
 
+        
+        JPanel raiz = new JPanel(new BorderLayout());
+        setContentPane(raiz);
+        JLabel lblLogo = new JLabel();
+        lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
+        lblLogo.setBorder(new EmptyBorder(10, 0, 0, 0));
+        ImageIcon logo = carregarIcone("/img/logo.png", 240, 80);
+        		if (logo != null) {
+        			lblLogo.setIcon(logo);
+        		} else {
+        			lblLogo.setText("Cadastro de Estudante");
+        	}
+        			raiz.add(lblLogo, BorderLayout.NORTH);
+
+        
+        
+        
         listaItens.setCellRenderer(cbProduto.getRenderer());
         painelResumo.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
         JPanel topo = new JPanel(new BorderLayout());
         topo.add(criarBarraComandos(), BorderLayout.NORTH);
         topo.add(painelResumo, BorderLayout.CENTER);
         add(topo, BorderLayout.NORTH);
+        raiz.add(contentPane, BorderLayout.CENTER);
 
         tabela.setRowHeight(22);
         tabela.setAutoCreateRowSorter(true);
@@ -406,6 +447,35 @@ public class JanelaPedido extends JFrame {
         if (sel == null || "(todos)".equals(sel)) return null;
         return Status.valueOf(sel.toString());
     }
+    
+    
+    
+    /**
+    * Carrega uma imagem de dentro do projeto e ajusta ao tamanho pedido,
+    * mantendo a proporcao. Devolve null se o arquivo nao for encontrado.
+    */
+    private ImageIcon carregarIcone(String caminho, int largura, int altura) {
+    	URL url = JanelaPedido.class.getResource(caminho);
+    		if (url == null) {
+    			System.err.println("Imagem nao encontrada: " + caminho);
+    			return null;
+    		}
+    		ImageIcon original = new ImageIcon(url);
+    			double escala = Math.min((double) largura / original.getIconWidth(),
+    			(double) altura / original.getIconHeight());
+			    int w = (int) (original.getIconWidth() * escala);
+			    int h = (int) (original.getIconHeight() * escala);
+				    Image reduzida = original.getImage()
+				    .getScaledInstance(w, h, Image.SCALE_SMOOTH);
+							    return new ImageIcon(reduzida);
+							    }
+							    
+							    
+							    
+    
+    
+    
+    
 
     // ---- Grupo 1: getters usados pelo Controller ----
     public JButton getBtnNovo() { return btnNovo; }
