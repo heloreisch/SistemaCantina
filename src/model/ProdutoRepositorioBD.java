@@ -6,8 +6,10 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.sql.Statement;
 
 /**
  * MODEL - guarda os animais no MySQL e aplica a regra do conjunto.
@@ -33,28 +35,62 @@ public class ProdutoRepositorioBD {
 		return DriverManager.getConnection(URL, USER, SENHA);
 	}
 
-	public void selecionar(Produto a) {
-		// 1. as regras do animal sozinho, ja escritas no Model
-		String problema = a.validar();
+//	public void selecionar(Produto a) {
+//		// 1. as regras do animal sozinho, ja escritas no Model
+//		String problema = a.validar();
+//		if (problema != null) {
+//			throw new IllegalArgumentException(problema);
+//		}
+//		// 2. a regra que depende dos OUTROS registros
+//		if (existe(a.getNome(), a.getCategoria())) {
+//			throw new IllegalArgumentException("Essa categoria ja tem um produto com esse nome.");
+//		}
+//		String sql = "INSERT INTO Produto (nome, categoria, preco) VALUES(?, ?, ?)";
+//		try (Connection con = abrir(); PreparedStatement ps = con.prepareStatement(sql)) {
+//			// Um set por campo, na ORDEM das colunas do INSERT.
+//			// Indices comecam em 1. O tipo do set combina com o tipo do
+//			// atributo: setString para texto, setDouble para decimal.
+//			ps.setString(1, a.getNome());
+//			ps.setString(2, a.getCategoria().name().trim());
+//			ps.setDouble(3, a.getPreco());
+//
+//			ps.executeUpdate();
+//		} catch (SQLException erro) {
+//			throw new RuntimeException("Erro ao gravar: " + erro.getMessage(), erro);
+//		}
+//	}
+
+	public void salvar(Produto p) {
+
+		String problema = p.validar();
+
 		if (problema != null) {
 			throw new IllegalArgumentException(problema);
 		}
-		// 2. a regra que depende dos OUTROS registros
-		if (existe(a.getNome(), a.getCategoria())) {
-			throw new IllegalArgumentException("Essa categoria ja tem um produto com esse nome.");
+
+		if (existe(p.getNome(), p.getCategoria())) {
+			throw new IllegalArgumentException("Essa categoria já contém esse produto.");
 		}
-		String sql = "INSERT INTO Produto (nome, categoria, preco) VALUES(?, ?, ?)";
-		try (Connection con = abrir(); PreparedStatement ps = con.prepareStatement(sql)) {
-			// Um set por campo, na ORDEM das colunas do INSERT.
-			// Indices comecam em 1. O tipo do set combina com o tipo do
-			// atributo: setString para texto, setDouble para decimal.
-			ps.setString(1, a.getNome());
-			ps.setString(2, a.getCategoria().name().trim());
-			ps.setDouble(3, a.getPreco());
+
+		String sql = "INSERT INTO Produto (nome, categoria, preco) " + "VALUES (?, ?, ?)";
+
+		try (Connection con = abrir();
+				PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+			ps.setString(1, p.getNome());
+			ps.setString(2, p.getCategoria().name());
+			ps.setDouble(3, p.getPreco());
 
 			ps.executeUpdate();
+
+			try (ResultSet rs = ps.getGeneratedKeys()) {
+				if (rs.next()) {
+					p.setId(rs.getInt(1));
+				}
+			}
+
 		} catch (SQLException erro) {
-			throw new RuntimeException("Erro ao gravar: " + erro.getMessage(), erro);
+			throw new RuntimeException("Erro ao salvar produto: " + erro.getMessage(), erro);
 		}
 	}
 
@@ -72,7 +108,7 @@ public class ProdutoRepositorioBD {
 	}
 
 	public List<Produto> listarTodos() {
-		String sql = "SELECT nome, categoria, preco, id FROM produto ORDER BY nome";
+		String sql = "SELECT id, nome, categoria, preco, status " + "FROM produto ORDER BY nome";
 		List<Produto> lista = new ArrayList<>();
 		try (Connection con = abrir();
 				PreparedStatement ps = con.prepareStatement(sql);
@@ -82,10 +118,10 @@ public class ProdutoRepositorioBD {
 				// getString para VARCHAR, getDouble para DECIMAL.
 				Produto a = new Produto();
 
+				a.setId(rs.getInt("id"));
 				a.setNome(rs.getString("nome"));
 				a.setCategoria(Categoria.valueOf(rs.getString("categoria")));
 				a.setPreco(rs.getDouble("preco"));
-
 				lista.add(a);
 			}
 		} catch (SQLException erro) {
@@ -93,32 +129,69 @@ public class ProdutoRepositorioBD {
 		}
 		return lista;
 	}
-	
+
+	/**
+	 * Filtra por status (null = todos) e por um trecho que pode ser parte do id ou
+	 * do texto dos produtos. O trecho SQL concatenado e FIXO; o que vem do usuario
+	 * entra sempre por "?".
+	 */
+	public List<Produto> listarFiltrado(String categoria, String trecho) {
+		
+		String sql = "SELECT id, nome, categoria, preco FROM produto "
+				+ "WHERE (nome LIKE ?) "
+				+ (categoria == null || categoria.equals("todas") ? ""
+						: "AND categoria = ? ")
+				+ "ORDER BY nome";
+		
+		List<Produto> lista = new ArrayList<>();
+		
+		try (Connection con = abrir(); PreparedStatement ps = con.prepareStatement(sql)) {
+			String like = "%" + trecho + "%";
+			ps.setString(1, like);
+
+			if (categoria!= null && !categoria.equals("(todas)")) {
+				ps.setString(2, categoria);
+			}
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					Produto p = new Produto();
+					
+					p.setId(rs.getInt("id"));
+					p.setNome(rs.getString("nome"));
+					p.setCategoria(Categoria.valueOf(rs.getString("categoria")));
+					p.setPreco(rs.getDouble("preco"));
+					
+					lista.add(p);
+				}
+			}
+		} catch (SQLException erro) {
+			throw new RuntimeException("Erro ao listar pedidos: " + erro.getMessage(), erro);
+		}
+		return lista;
+	}
+
 	public List<Categoria> listarCategorias() {
-		String sql = "SELECT COLUMN_TYPE FROM information_schema.COLUMNS "
-	               + "WHERE TABLE_SCHEMA = DATABASE() "
-	               + "AND LOWER(TABLE_NAME) = 'produto' AND COLUMN_NAME = 'categoria'";
-	    List<Categoria> lista = new ArrayList<>();
+		String sql = "SELECT COLUMN_TYPE FROM information_schema.COLUMNS " + "WHERE TABLE_SCHEMA = DATABASE() "
+				+ "AND LOWER(TABLE_NAME) = 'produto' AND COLUMN_NAME = 'categoria'";
+		List<Categoria> lista = new ArrayList<>();
 
-	    try (Connection con = abrir();
-	         PreparedStatement ps = con.prepareStatement(sql);
-	         ResultSet rs = ps.executeQuery()) {
+		try (Connection con = abrir();
+				PreparedStatement ps = con.prepareStatement(sql);
+				ResultSet rs = ps.executeQuery()) {
 
-	        if (rs.next()) {
-	        	 String tipo = rs.getString(1);
-	             String miolo = tipo.substring(tipo.indexOf('(') + 1, tipo.lastIndexOf(')'));
-	             for (String v : miolo.split(",")) {
-	                 lista.add(Categoria.valueOf(v.replace("'", "").trim()));
-	        }
+			if (rs.next()) {
+				String tipo = rs.getString(1);
+				String miolo = tipo.substring(tipo.indexOf('(') + 1, tipo.lastIndexOf(')'));
+				for (String v : miolo.split(",")) {
+					lista.add(Categoria.valueOf(v.replace("'", "").trim()));
+				}
 
-	        } 
-	    }catch (SQLException erro) {
-	        throw new RuntimeException(
-	            "Erro ao listar categorias: " + erro.getMessage(), erro
-	        );
-	    }
+			}
+		} catch (SQLException erro) {
+			throw new RuntimeException("Erro ao listar categorias: " + erro.getMessage(), erro);
+		}
 
-	    return lista;
+		return lista;
 	}
 
 	public int contar() {
@@ -136,35 +209,34 @@ public class ProdutoRepositorioBD {
 	}
 
 	/** Teste de ambiente: rode ANTES de depurar qualquer botao. */
-	 public static void main(String[] args) {
-	 ProdutoRepositorioBD bd = new ProdutoRepositorioBD();
-	 try (Connection con = bd.abrir()) {
-	 System.out.println("Conexao OK com " + con.getCatalog());
-	 System.out.println("Registros: " + bd.contar());
-	 } catch (SQLException e) {
-	 System.out.println("Falha: " + e.getMessage());
-	 }
-	 }
-	 public List<Produto> listarPorCategoria(Categoria categoria) {
-		    String sql = "SELECT nome, categoria, preco FROM produto WHERE categoria = ? ORDER BY nome";
-		    List<Produto> lista = new ArrayList<>();
-		    try (Connection con = abrir(); PreparedStatement ps = con.prepareStatement(sql)) {
-		        ps.setString(1, categoria.name());
-		        try (ResultSet rs = ps.executeQuery()) {
-		            while (rs.next()) {
-		                Produto p = new Produto();
-		                p.setNome(rs.getString("nome"));
-		                p.setCategoria(Categoria.valueOf(rs.getString("categoria")));
-		                p.setPreco(rs.getDouble("preco"));
-		                lista.add(p);
-		            }
-		        }
-		    } catch (SQLException erro) {
-		        throw new RuntimeException("Erro ao listar: " + erro.getMessage(), erro);
-		    }
-		    return lista;
+	public static void main(String[] args) {
+		ProdutoRepositorioBD bd = new ProdutoRepositorioBD();
+		try (Connection con = bd.abrir()) {
+			System.out.println("Conexao OK com " + con.getCatalog());
+			System.out.println("Registros: " + bd.contar());
+		} catch (SQLException e) {
+			System.out.println("Falha: " + e.getMessage());
 		}
 	}
 
-
-
+	public List<Produto> listarPorCategoria(Categoria categoria) {
+		String sql = "SELECT id, nome, categoria, preco FROM produto WHERE categoria = ? ORDER BY nome";
+		List<Produto> lista = new ArrayList<>();
+		try (Connection con = abrir(); PreparedStatement ps = con.prepareStatement(sql)) {
+			ps.setString(1, categoria.name());
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					Produto p = new Produto();
+					p.setId(rs.getInt("id"));
+					p.setNome(rs.getString("nome"));
+					p.setCategoria(Categoria.valueOf(rs.getString("categoria")));
+					p.setPreco(rs.getDouble("preco"));
+					lista.add(p);
+				}
+			}
+		} catch (SQLException erro) {
+			throw new RuntimeException("Erro ao listar: " + erro.getMessage(), erro);
+		}
+		return lista;
+	}
+}

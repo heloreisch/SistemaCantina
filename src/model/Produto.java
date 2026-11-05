@@ -7,8 +7,10 @@ public class Produto {
 			private String nome;
 			private double preco;
 			private Categoria categoria;
-			private int id_produto;
+			private int id;
 			
+			public Produto() {
+			}
 			
 			public Produto(String nome, double preco, Categoria categoria) {
 				super();
@@ -16,6 +18,7 @@ public class Produto {
 				this.preco = preco;
 				this.categoria = categoria;
 			}
+			
 			/* REGRAS
 			 *  - NOME: não pode conter caracteres especiais
 			 *  - CATEGORIA: deve estar disponível no horário específico - tratamento feito na hora do pedido
@@ -40,13 +43,20 @@ public class Produto {
 				this.categoria = categoria;
 				
 			}
+			public int getId() {
+			    return id;
+			}
+
+			public void setId(int id) {
+			    this.id = id;
+			}
 			
 			public String validar() {
 				if(nome == null || nome.trim().isEmpty()) {
 					return "Preencha o nome";
 				}
 				
-				if(preco<0) {
+				if(preco<=0) {
 					return "O preço deve ser maior que zero";
 				}
 				

@@ -126,7 +126,7 @@ public class JanelaProduto extends JFrame {
         barra.add(Box.createHorizontalStrut(16));
         barra.add(new JLabel("Busca:"));
         barra.add(txtBusca);
-        barra.add(new JLabel("Especie:"));
+        barra.add(new JLabel("Categoria:"));
         barra.add(cbCategorias);
         return barra;
     }
@@ -298,7 +298,7 @@ public class JanelaProduto extends JFrame {
     public void mostrarStatus(String texto) { lblStatus.setText(" " + texto); }
     public String getBusca() { return txtBusca.getText().trim(); }
     
-    public String getEspecieSelecionada() {
+    public String getCategoriaSelecionada() {
         Object sel = cbCategorias.getSelectedItem();
         return (sel == null) ? "" : sel.toString();
     }
@@ -316,7 +316,7 @@ public class JanelaProduto extends JFrame {
     public JButton getBtnSalvar() { return btnSalvar; }
     public JButton getBtnCancelar() { return btnCancelar; }
     public JTextField getTxtBusca() { return txtBusca; }
-    public JComboBox<String> getCbEspecie() { return cbCategorias; }
+    public JComboBox<String> getCbCategoria() { return cbCategorias; }
     public JTable getTabela() { return tabela; }
 }
 

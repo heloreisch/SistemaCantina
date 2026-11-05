@@ -37,7 +37,7 @@ public class ProdutoController implements ActionListener, ListSelectionListener 
         this.view.getBtnExcluir().addActionListener(this);
         this.view.getBtnSalvar().addActionListener(this);
         this.view.getBtnCancelar().addActionListener(this);
-        this.view.getCbEspecie().addActionListener(this);
+        this.view.getCbCategoria().addActionListener(this);
         this.view.getTabela().getSelectionModel().addListSelectionListener(this);
 
         // busca "ao digitar": cada tecla reinicia o relogio
@@ -128,11 +128,11 @@ public class ProdutoController implements ActionListener, ListSelectionListener 
     private void atualizarTela(int idParaSelecionar) {
         this.recarregando = true;
         try {
-            String especie = this.view.getProdutoSelecionado();
-            this.view.carregarCategorias(this.bd.listarCategorias(), especie);
+            String p = this.view.getProdutoSelecionado();
+            this.view.carregarCategorias(this.bd.listarCategorias(), p);
 
             List<Produto> lista = this.bd.listarFiltrado(
-                    this.view.getProdutoSelecionado(), this.view.getBusca());
+                    this.view.getCategoriaSelecionada(), this.view.getBusca());
             this.view.carregarTabela(lista);
             this.view.carregarResumo(this.bd.contarPorCategoria());
             this.view.selecionarPorId(idParaSelecionar);
