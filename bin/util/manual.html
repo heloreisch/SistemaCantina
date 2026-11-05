@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>Manual de uso</title>
+<style type="text/css">
+body { font-family: SansSerif; font-size: 11pt; margin: 10px; }
+h1 { color: #2c6e63; }
+h2 { color: #2c6e63; }
+th { background-color: #e3eedd; text-align: left; }
+</style>
+</head>
+<body>
+<h1>Manual de uso - Cadastro de Livros</h1>
+<h2>1. Para que serve</h2>
+<p>O programa cadastra os livros da biblioteca em um banco de dados
+MySQL. Para cada livro sao registrados o <b>nome</b>, o <b>autor</b>,
+a quantidade de <b>paginas</b> e o numero de <b>copias</b>.</p>
+<h2>2. Cadastrar um livro</h2>
+<ol>
+<li>Preencha os quatro campos da tela.</li>
+<li>Clique em <b>Cadastrar</b>.</li>
+<li>Se tudo estiver correto, aparece a mensagem de confirmacao com o
+total de livros cadastrados, e os campos sao limpos.</li>
+</ol>
+<h2>3. Outras opcoes</h2>
+<ul>
+<li><b>Limpar</b> (ou Arquivo &gt; Limpar campos): esvazia todos os campos.</li>
+<li><b>Fechar</b> (ou Arquivo &gt; Sair): encerra o programa.</li>
+<li><b>Ajuda &gt; Sobre</b>: mostra os autores e a versao.</li>
+</ul>
+<h2>4. Mensagens de erro</h2>
+<table border="1" cellpadding="4" cellspacing="0">
+<tr><th>Mensagem</th><th>O que fazer</th></tr>
+<tr><td>Preencha o nome do livro.</td><td>Digite o nome no primeiro campo.</td></tr>
+<tr><td>Preencha o nome do autor.</td><td>Digite o autor.</td></tr>
+<tr><td>As paginas devem ser um numero inteiro valido.</td><td>Use apenas digitos, sem letras nem virgula.</td></tr>
+<tr><td>Copias deve ser maior que 0.</td><td>Informe pelo menos 1 copia.</td></tr>
+</table>
+<h2>5. Atalhos de teclado</h2>
+<ul>
+<li><b>F1</b> - abre este manual</li>
+<li><b>Ctrl+L</b> - limpar campos</li>
+<li><b>Ctrl+Q</b> - sair</li>
+</ul>
+<h2>6. Requisitos</h2>
+<ul>
+<li>Java 8 ou superior;</li>
+<li>MySQL em execucao, com o banco <b>biblioteca</b>.</li>
+</ul>
+</body>
+</html>

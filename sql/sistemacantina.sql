@@ -18,8 +18,16 @@ CREATE TABLE IF NOT EXISTS Produto (
  id_produto int not null,
   status_pedio ENUM('PEDIDO_RECEBIDO','PREPARANDO','FINALIZADO','PAGO', 'ENTREGUE','CANCELADO'),
  precoTotal DECIMAL(6,2) not null,
- tipo_pagamento ENUM('NA_ENTREGA',	'PIX','CARTÃO'),
+ tipo_pagamento ENUM('NA_ENTREGA','PIX','CARTAO'),
  horario datetime (6) not null,
  FOREIGN KEY(id_produto) references Produto (id)
 
  );
+ 
+ CREATE TABLE item_pedido (
+    id_pedido  INT NOT NULL,
+    id_produto INT NOT NULL,
+    PRIMARY KEY (id_pedido, id_produto),
+    FOREIGN KEY (id_pedido)  REFERENCES pedido(id_pedido),
+    FOREIGN KEY (id_produto) REFERENCES produto(id)
+);

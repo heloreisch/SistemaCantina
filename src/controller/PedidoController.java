@@ -36,6 +36,7 @@ public class PedidoController implements ActionListener, ListSelectionListener {
         this.viewp.getBtnNovo().addActionListener(this);
         this.viewp.getBtnEditar().addActionListener(this);
         this.viewp.getBtnExcluir().addActionListener(this);
+        this.viewp.getBtnProdutos().addActionListener(this);
         this.viewp.getBtnSalvar().addActionListener(this);
         this.viewp.getBtnCancelar().addActionListener(this);
         this.viewp.getCbFiltroStatus().addActionListener(this);
@@ -43,7 +44,13 @@ public class PedidoController implements ActionListener, ListSelectionListener {
         this.viewp.getBtnRemoverItem().addActionListener(this);
         this.viewp.getTabela().getSelectionModel().addListSelectionListener(this);
 
-        // busca "ao digitar": cada tecla reinicia o relogio
+        // tens do menu (this)sempre.
+        this.viewp.getMiLimpar().addActionListener(this);
+        this.viewp.getMiSair().addActionListener(this);
+        this.viewp.getMiManual().addActionListener(this);
+        this.viewp.getMiSobre().addActionListener(this);
+
+        // busca ao digitar = cada tecla reinicia o relogio
         this.esperaBusca = new Timer(300, e -> atualizarTela(idSelecionado()));
         this.esperaBusca.setRepeats(false);
         this.viewp.getTxtBusca().getDocument().addDocumentListener(new DocumentListener() {
@@ -91,6 +98,10 @@ public class PedidoController implements ActionListener, ListSelectionListener {
             entrarEdicao(this.viewp.getPedidoSelecionado());
         } else if (origem == this.viewp.getBtnExcluir()) {
             excluir();
+        } else if (origem == this.viewp.getBtnProdutos()) {
+            // O combo de produtos ja e recarregado em entrarEdicao,
+            // entao so abrir a tela de produtos.
+            this.viewp.mostrarProdutos();
         } else if (origem == this.viewp.getBtnSalvar()) {
             salvar();
         } else if (origem == this.viewp.getBtnCancelar()) {
@@ -103,7 +114,34 @@ public class PedidoController implements ActionListener, ListSelectionListener {
             adicionarItem();
         } else if (origem == this.viewp.getBtnRemoverItem()) {
             removerItem();
+        } else if (origem == this.viewp.getMiLimpar()) {
+            limparCampos();
+        } else if (origem == this.viewp.getMiSair()) {
+            this.viewp.fechar();
+        } else if (origem == this.viewp.getMiManual()) {
+            this.viewp.mostrarManual();
+        } else if (origem == this.viewp.getMiSobre()) {
+            this.viewp.mostrarSobre();
         }
+    }
+
+    /**
+     * "Limpar campos": com o formulario aberto, esvazia o formulario;
+     * fora da edicao, limpa a busca e o filtro de status.
+     */
+    private void limparCampos() {
+        if (this.editando) {
+            this.viewp.limparFormulario();
+            return;
+        }
+        // recarregando = true -> a mudanca dos campos nao ""faz"" varias atualizacoes
+        this.recarregando = true;
+        try {
+            this.viewp.limparBusca();
+        } finally {
+            this.recarregando = false;
+        }
+        atualizarTela(idSelecionado());
     }
 
     private void adicionarItem() {
@@ -116,7 +154,7 @@ public class PedidoController implements ActionListener, ListSelectionListener {
             this.viewp.mostrarErro("Esse produto já está no pedido.");
             return;
         }
-        this.viewp.setPrecoTotal(this.viewp.somarItens()); // total = soma dos itens (ainda editavel)
+        this.viewp.setPrecoTotal(this.viewp.somarItens()); // total = soma dos itens 
     }
 
     private void removerItem() {
@@ -130,8 +168,8 @@ public class PedidoController implements ActionListener, ListSelectionListener {
     private void entrarEdicao(Pedido ped) {
         this.editando = true;
         this.emEdicao = ped;
-        // recarrega os produtos (podem ter sido cadastrados na outra tela).
-        // recarregando=true evita que o combo dispare o preenchimento do preco.
+        // recarrega os produtos
+        // recarregando=true evita que o combo o preenchimento do preco.
         this.recarregando = true;
         try {
             this.viewp.carregarProdutos(this.repositoriop.listarProdutos());
@@ -145,13 +183,13 @@ public class PedidoController implements ActionListener, ListSelectionListener {
     private void salvar() {
         Pedido ped;
         try {
-            // CONVERSAO: JTextField sempre devolve texto; a fronteira com a tela e quem converte.
+            // conversap text sempre devolve texto
             ped = this.viewp.lerFormulario();
         } catch (NumberFormatException ex) {
             this.viewp.mostrarErro("O preço total deve ser um número válido. Ex.: 12,50");
             return;
         }
-        // Os produtos vem da lista de itens do formulario.
+        // os produtos vem da lista de itens
         ArrayList<Produto> itens = this.viewp.getItens();
         if (itens.isEmpty()) {
             this.viewp.mostrarErro("Adicione pelo menos um produto ao pedido.");

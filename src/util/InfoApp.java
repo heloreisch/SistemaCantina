@@ -23,9 +23,9 @@ package util;
 			public static final String DISCIPLINA = "Programacao e Desenvolvimento de Sistemas I";
 			public static final String ANO = "2026";
 			public static final String TECNOLOGIAS = "Java (Swing), padrao MVC, MySQL (JDBC)";
-			}
+			
 
 	}
 
 
-}
+

@@ -2,9 +2,12 @@ package model;
 
 public enum Status {
 	
-	RECEBIDO, 
+	RECEBIDO,
 	PREPARANDO,
-	FINALIZADO;
+	FINALIZADO,
+	PAGO, 
+	ENTREGUE,
+	CANCELADO
 	
 	
 

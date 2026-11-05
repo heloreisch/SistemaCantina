@@ -1,7 +1,6 @@
 package view;
 
 import java.awt.BorderLayout;
-
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -12,24 +11,33 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.Insets;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
-import javax.swing.JList;
-import javax.swing.Box;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
@@ -39,32 +47,27 @@ import model.Pagamento;
 import model.Pedido;
 import model.Produto;
 import model.Status;
-import view.PedidoTableModel;
-// importar para logo
-import java.awt.BorderLayout;
-import java.awt.Image;
-import java.net.URL;
-import javax.swing.SwingConstants;
-import javax.swing.ImageIcon;
 
+import view.JanelaProduto;
 
 /** VIEW - so desenha. Nao conhece banco nem regra de negocio. */
 public class JanelaPedido extends JFrame {
     private static final long serialVersionUID = 1L;
 
-    // CENTER: a lista
+    // center a lista
     private PedidoTableModel modelo = new PedidoTableModel();
     private JTable tabela = new JTable(modelo);
 
-    // NORTH: comandos, busca, filtro e resumo
+    // NORTH  comando busca filtro 
     private JButton btnNovo = new JButton("Novo");
     private JButton btnEditar = new JButton("Editar");
     private JButton btnExcluir = new JButton("Excluir");
+    private JButton btnProdutos = new JButton("Produtos");
     private JTextField txtBusca = new JTextField(14);
     private JComboBox<String> cbFiltroStatus = new JComboBox<>();
     private JPanel painelResumo = new JPanel(new GridLayout(1, 0, 8, 0));
 
-    // EAST: detalhes com tres cartoes
+    // EAST detalhes com tres cartoes
     private CardLayout cardsDetalhe = new CardLayout();
     private JPanel painelDetalhe = new JPanel(cardsDetalhe);
     private JLabel lblDId = new JLabel(), lblDProdutos = new JLabel(), lblDPreco = new JLabel();
@@ -73,6 +76,7 @@ public class JanelaPedido extends JFrame {
     private JLabel lblEId = new JLabel("(novo)");
     private JComboBox<Produto> cbProduto = new JComboBox<>();
     private DefaultListModel<Produto> itensModel = new DefaultListModel<>();
+    // p armazenar elementos que serao exibidos list
     private JList<Produto> listaItens = new JList<>(itensModel);
     private JButton btnAdicionar = new JButton("Adicionar");
     private JButton btnRemoverItem = new JButton("Remover");
@@ -86,18 +90,35 @@ public class JanelaPedido extends JFrame {
     // SOUTH
     private JLabel lblBarra = new JLabel(" Pronto.");
 
-    
-	 /*  setTitle("Cantina");
-	    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	    setBounds(100, 100, 420, 450);
-	    setLocationRelativeTo(null); */
+    // itens do menu
+    private JMenuItem miLimpar;
+    private JMenuItem miSair;
+    private JMenuItem miManual;
+    private JMenuItem miSobre;
 
     public JanelaPedido() {
         setTitle("Sistema de Cantina - Pedidos");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(900, 470);
-        setMinimumSize(new Dimension(760, 380));
-        setLayout(new BorderLayout(6, 6));
+        setSize(1200, 560); // mais larga
+        setMinimumSize(new Dimension(1000, 500));
+        setLocationRelativeTo(null);
+
+        // icone da janela barra de titulo e de tarefas
+        ImageIcon icone = carregarIcone("/img/logoCantina.png", 32, 32);
+        if (icone != null) {
+            setIconImage(icone.getImage());
+        }
+
+        // ---------- o menu ----------
+        setJMenuBar(criarMenu());
+
+        // painel raiz
+        JPanel raiz = new JPanel(new BorderLayout());
+        setContentPane(raiz);
+
+        // painel com o layout principal da tela
+        JPanel conteudo = new JPanel(new BorderLayout(6, 6));
+        raiz.add(conteudo, BorderLayout.CENTER);
 
         cbFiltroStatus.addItem("(todos)");
         for (Status s : Status.values()) cbFiltroStatus.addItem(s.name());
@@ -107,47 +128,41 @@ public class JanelaPedido extends JFrame {
             public Component getListCellRendererComponent(JList<?> list, Object v, int i, boolean sel, boolean foco) {
                 super.getListCellRendererComponent(list, v, i, sel, foco);
                 if (v instanceof Produto) {
+                	// instanceof verifica se o objeto recebido é da classe produt
+                	//object v	= o elemento vai ser exibido naquele momento
                     Produto p = (Produto) v;
                     setText(p.getNome() + " - R$ " + String.format("%.2f", p.getPreco()));
                 } else {
                     setText("(escolha um produto)");
                 }
                 return this;
-                
             }
-            
         });
-        
-        
-        ImageIcon icone = carregarIcone("/img/icone.png", 32, 32);
-        if (icone != null) {
-        setIconImage(icone.getImage());
-        }
-
-        
-        JPanel raiz = new JPanel(new BorderLayout());
-        setContentPane(raiz);
-        JLabel lblLogo = new JLabel();
-        lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
-        lblLogo.setBorder(new EmptyBorder(10, 0, 0, 0));
-        ImageIcon logo = carregarIcone("/img/logo.png", 240, 80);
-        		if (logo != null) {
-        			lblLogo.setIcon(logo);
-        		} else {
-        			lblLogo.setText("Cadastro de Estudante");
-        	}
-        			raiz.add(lblLogo, BorderLayout.NORTH);
-
-        
-        
-        
+        	
+        // permite personalizar a aparência dos itens na lista = combo box de produtos
         listaItens.setCellRenderer(cbProduto.getRenderer());
         painelResumo.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
+
+     
+        JLabel lblLogo = new JLabel();
+        lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
+        lblLogo.setBorder(new EmptyBorder(0, 10, 0, 10));
+        ImageIcon logo = carregarIcone("/img/logoCantina.png", 260, 140);
+        if (logo != null) {
+            lblLogo.setIcon(logo);
+        } else {
+            lblLogo.setText("Sistema de Cantina");
+        }
+
+        // comandos + resumo a esquerda e logo a direita
+        JPanel esquerda = new JPanel(new BorderLayout());
+        esquerda.add(criarBarraComandos(), BorderLayout.NORTH);
+        esquerda.add(painelResumo, BorderLayout.CENTER);
+
         JPanel topo = new JPanel(new BorderLayout());
-        topo.add(criarBarraComandos(), BorderLayout.NORTH);
-        topo.add(painelResumo, BorderLayout.CENTER);
-        add(topo, BorderLayout.NORTH);
-        raiz.add(contentPane, BorderLayout.CENTER);
+        topo.add(esquerda, BorderLayout.CENTER);
+        topo.add(lblLogo, BorderLayout.EAST);
+        conteudo.add(topo, BorderLayout.NORTH);
 
         tabela.setRowHeight(22);
         tabela.setAutoCreateRowSorter(true);
@@ -160,13 +175,62 @@ public class JanelaPedido extends JFrame {
                 setHorizontalAlignment(SwingConstants.RIGHT);
             }
         });
-        add(new JScrollPane(tabela), BorderLayout.CENTER);
+        conteudo.add(new JScrollPane(tabela), BorderLayout.CENTER);
 
-        add(criarPainelDetalhe(), BorderLayout.EAST);
-        add(lblBarra, BorderLayout.SOUTH);
+        conteudo.add(criarPainelDetalhe(), BorderLayout.EAST);
+        conteudo.add(lblBarra, BorderLayout.SOUTH);
 
         mostrarVazio();
         atualizarBotoes(false, false);
+    }
+
+    /** Monta a barra de menus: Arquivo e Ajuda. */
+    private JMenuBar criarMenu() {
+        JMenuBar barra = new JMenuBar();
+
+        // ---- menu Arquivo ----
+        JMenu menuArquivo = new JMenu("Arquivo");
+        menuArquivo.setMnemonic(KeyEvent.VK_A); // Alt+A abre o menu
+        miLimpar = new JMenuItem("Limpar campos");
+        miLimpar.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
+        menuArquivo.add(miLimpar);
+        menuArquivo.addSeparator(); // linha divisoria
+        miSair = new JMenuItem("Sair");
+        miSair.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
+        menuArquivo.add(miSair);
+
+        // ---- menu Ajuda ----
+        JMenu menuAjuda = new JMenu("Ajuda");
+        menuAjuda.setMnemonic(KeyEvent.VK_J);
+        miManual = new JMenuItem("Manual de uso");
+        miManual.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
+        menuAjuda.add(miManual);
+        miSobre = new JMenuItem("Sobre");
+        menuAjuda.add(miSobre);
+
+        barra.add(menuArquivo);
+        barra.add(menuAjuda);
+        return barra;
+    }
+
+    /**
+     * Carrega uma imagem de dentro do projeto e ajusta ao tamanho pedido,
+     * mantendo a proporcao. Devolve null se o arquivo nao for encontrado.
+     */
+    private ImageIcon carregarIcone(String caminho, int largura, int altura) {
+        URL url = JanelaPedido.class.getResource(caminho);
+        if (url == null) {
+            System.err.println("Imagem nao encontrada: " + caminho);
+            return null;
+        }
+        ImageIcon original = new ImageIcon(url);
+        double escala = Math.min((double) largura / original.getIconWidth(),
+                (double) altura / original.getIconHeight());
+        int w = (int) (original.getIconWidth() * escala);
+        int h = (int) (original.getIconHeight() * escala);
+        Image reduzida = original.getImage()
+                .getScaledInstance(w, h, Image.SCALE_SMOOTH);
+        return new ImageIcon(reduzida);
     }
 
     private JPanel criarBarraComandos() {
@@ -174,6 +238,7 @@ public class JanelaPedido extends JFrame {
         barra.add(btnNovo);
         barra.add(btnEditar);
         barra.add(btnExcluir);
+        barra.add(btnProdutos);
         barra.add(Box.createHorizontalStrut(16));
         barra.add(new JLabel("Busca (id ou produto):"));
         barra.add(txtBusca);
@@ -262,14 +327,40 @@ public class JanelaPedido extends JFrame {
 
     /** Uma linha "rotulo + campo" do formulario. */
     private void linha(JPanel p, GridBagConstraints g, int y, String rotulo, Component campo) {
-        g.gridwidth = 1;
-        g.gridx = 0; g.gridy = y; g.weightx = 0; g.anchor = GridBagConstraints.EAST;
-        p.add(new JLabel(rotulo), g);
-        g.gridx = 1; g.weightx = 1;
-        p.add(campo, g);
+        GridBagConstraints gRotulo = (GridBagConstraints) g.clone();
+        gRotulo.gridwidth = 1;
+        gRotulo.gridx = 0;
+        gRotulo.gridy = y;
+        gRotulo.weightx = 0;
+        gRotulo.anchor = GridBagConstraints.EAST;
+        p.add(new JLabel(rotulo), gRotulo);
+
+        GridBagConstraints gCampo = (GridBagConstraints) g.clone();
+        gCampo.gridwidth = 1;
+        gCampo.gridx = 1;
+        gCampo.gridy = y;
+        gCampo.weightx = 1;
+        p.add(campo, gCampo);
     }
 
     // ---- Grupo 2: capacidades da tela ----
+
+    public void mostrarSobre() {
+        new JanelaSobre(this).setVisible(true);
+    }
+
+    public void mostrarManual() {
+        new JanelaManual(this).setVisible(true);
+    }
+
+    /**
+     * Abre a tela de produtos.
+     * ATENCAO: troque JanelaProduto pelo nome real da sua classe, e ajuste o
+     * construtor se ele for diferente (aqui assume new JanelaProduto(this)).
+     */
+    public void mostrarProdutos() {
+        new JanelaProduto().setVisible(true);
+    }
 
     public void carregarTabela(List<Pedido> lista) { modelo.setDados(lista); }
 
@@ -415,6 +506,7 @@ public class JanelaPedido extends JFrame {
         btnNovo.setEnabled(!editando);
         btnEditar.setEnabled(temSelecao && !editando);
         btnExcluir.setEnabled(temSelecao && !editando);
+        btnProdutos.setEnabled(!editando);
         tabela.setEnabled(!editando);
         txtBusca.setEnabled(!editando);
         cbFiltroStatus.setEnabled(!editando);
@@ -447,40 +539,32 @@ public class JanelaPedido extends JFrame {
         if (sel == null || "(todos)".equals(sel)) return null;
         return Status.valueOf(sel.toString());
     }
-    
-    
-    
-    /**
-    * Carrega uma imagem de dentro do projeto e ajusta ao tamanho pedido,
-    * mantendo a proporcao. Devolve null se o arquivo nao for encontrado.
-    */
-    private ImageIcon carregarIcone(String caminho, int largura, int altura) {
-    	URL url = JanelaPedido.class.getResource(caminho);
-    		if (url == null) {
-    			System.err.println("Imagem nao encontrada: " + caminho);
-    			return null;
-    		}
-    		ImageIcon original = new ImageIcon(url);
-    			double escala = Math.min((double) largura / original.getIconWidth(),
-    			(double) altura / original.getIconHeight());
-			    int w = (int) (original.getIconWidth() * escala);
-			    int h = (int) (original.getIconHeight() * escala);
-				    Image reduzida = original.getImage()
-				    .getScaledInstance(w, h, Image.SCALE_SMOOTH);
-							    return new ImageIcon(reduzida);
-							    }
-							    
-							    
-							    
-    
-    
-    
-    
+
+    public void limparFormulario() {
+        txtPrecoTotal.setText("");
+        // limpa os produtos adicionados
+        itensModel.clear();
+        // limpa a seleção do produto
+        cbProduto.setSelectedIndex(-1);
+        cbPagamento.setSelectedIndex(0);
+        // volta o status para a primeira opção
+        cbStatus.setSelectedIndex(0);
+        listaItens.clearSelection();
+        txtPrecoTotal.requestFocusInWindow();
+    }
+
+    public void limparBusca() {
+        txtBusca.setText("");
+        // volta o filtro para todos
+        cbFiltroStatus.setSelectedIndex(0);
+        tabela.clearSelection();
+    }
 
     // ---- Grupo 1: getters usados pelo Controller ----
     public JButton getBtnNovo() { return btnNovo; }
     public JButton getBtnEditar() { return btnEditar; }
     public JButton getBtnExcluir() { return btnExcluir; }
+    public JButton getBtnProdutos() { return btnProdutos; }
     public JButton getBtnSalvar() { return btnSalvar; }
     public JButton getBtnCancelar() { return btnCancelar; }
     public JComboBox<Produto> getCbProduto() { return cbProduto; }
@@ -489,4 +573,10 @@ public class JanelaPedido extends JFrame {
     public JTextField getTxtBusca() { return txtBusca; }
     public JComboBox<String> getCbFiltroStatus() { return cbFiltroStatus; }
     public JTable getTabela() { return tabela; }
+
+    // itens do menu
+    public JMenuItem getMiLimpar() { return miLimpar; }
+    public JMenuItem getMiSair() { return miSair; }
+    public JMenuItem getMiManual() { return miManual; }
+    public JMenuItem getMiSobre() { return miSobre; }
 }

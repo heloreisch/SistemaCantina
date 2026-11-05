@@ -6,16 +6,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import model.Pedido;
-import model.Produto;
-import model.Categoria;
-import model.Pagamento;
-import model.Status;
 
 /**
  * MODEL - guarda os pedidos no MySQL e aplica a regra do conjunto.
@@ -32,27 +28,29 @@ public class PedidoRepositorioBD {
         return DriverManager.getConnection(URL, USER, SENHA);
     }
 
-    /** true se o pedido existe e esta com status FINALIZADO. */
+    // true se o pedido existe e esta com status = finalizado 
     private boolean estaFinalizado(int idPedido) {
         String sql = "SELECT status_pedido FROM pedido WHERE id_pedido = ?";
         try (Connection con = abrir();
              PreparedStatement ps = con.prepareStatement(sql)) {
+        	//substitui o primeiro ? pelo identificador do pedido
             ps.setInt(1, idPedido);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next() && "FINALIZADO".equals(rs.getString("status_pedido"));
             }
         } catch (SQLException erro) {
-            throw new RuntimeException("Erro ao verificar pedido.", erro);
+            throw new RuntimeException("Erro ao verificar pedido: " + erro.getMessage(), erro);
         }
     }
 
-    /** INSERT. Devolve o id gerado ao proprio objeto. */
+    //  devolve o id gerado para o proprio objeto
     public void salvar(Pedido pedido) {
         String problema = pedido.validar();
         if (problema != null) {
             throw new IllegalArgumentException(problema);
         }
-
+        	
+        //add pedido
         String sql = "INSERT INTO pedido (produtos, preco_total, status_pedido, tipo_pagamento) VALUES (?, ?, ?, ?)";
         try (Connection con = abrir();
              PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -70,11 +68,11 @@ public class PedidoRepositorioBD {
             }
             gravarItens(con, pedido.getIdPedido(), pedido.getProdutos());
         } catch (SQLException erro) {
-            throw new RuntimeException("Erro ao salvar pedido.", erro);
+            throw new RuntimeException("Erro ao salvar pedido: " + erro.getMessage(), erro);
         }
     }
 
-    /** UPDATE. Pedido finalizado nao pode ser alterado. */
+    //  retriçao = pedido finalizado nao pode ser alterado. //
     public void alterar(Pedido pedido) {
         String problema = pedido.validar();
         if (problema != null) {
@@ -101,11 +99,11 @@ public class PedidoRepositorioBD {
             }
             gravarItens(con, pedido.getIdPedido(), pedido.getProdutos());
         } catch (SQLException erro) {
-            throw new RuntimeException("Erro ao alterar pedido.", erro);
+            throw new RuntimeException("Erro ao alterar pedido: " + erro.getMessage(), erro);
         }
     }
 
-    /** DELETE (itens primeiro, depois o pedido, numa transacao). Finalizado nao exclui. */
+    //  deletar itens primeiro, depois o pedido, finalizado nao exclui //
     public void excluir(int idPedido) {
         if (estaFinalizado(idPedido)) {
             throw new IllegalArgumentException("Não é possível excluir um pedido finalizado.");
@@ -131,11 +129,11 @@ public class PedidoRepositorioBD {
                 throw erro;
             }
         } catch (SQLException erro) {
-            throw new RuntimeException("Erro ao excluir pedido.", erro);
+            throw new RuntimeException("Erro ao excluir pedido: " + erro.getMessage(), erro);
         }
     }
 
-    /** "Coxinha, Suco": texto da coluna produtos (usado na busca). */
+    // coxinha, suco -> texto da coluna produtos pra ser usado na busca 
     private String resumo(List<Produto> produtos) {
         StringBuilder sb = new StringBuilder();
         for (Produto p : produtos) {
@@ -145,7 +143,7 @@ public class PedidoRepositorioBD {
         return sb.toString();
     }
 
-    /** Regrava os itens do pedido em item_pedido (apaga os antigos e insere os atuais). */
+    // regrava os itens do pedido em item_pedido apaga os antigos e insere os atuais 
     private void gravarItens(Connection con, int idPedido, List<Produto> produtos) throws SQLException {
         String sqlDel = "DELETE FROM item_pedido WHERE id_pedido = ?";
         String sqlIns = "INSERT IGNORE INTO item_pedido (id_pedido, id_produto) "
@@ -162,6 +160,34 @@ public class PedidoRepositorioBD {
         }
     }
 
+    
+     // converte o texto da categoria no enum Categoria ignora maiusculas e tal e acentos para nao quebrar quando o banco tem algado e o enum e SALGADO.
+     
+    private Categoria lerCategoria(String texto) {
+        if (texto == null) {
+            throw new IllegalArgumentException("Produto sem categoria no banco.");
+        }
+        String chave = Normalizer.normalize(texto.trim(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .replace(' ', '_');
+        for (Categoria c : Categoria.values()) {
+            if (c.name().equalsIgnoreCase(chave)) {
+                return c;
+            }
+        }
+        throw new IllegalArgumentException("Categoria desconhecida no banco: '" + texto
+                + "'. Valores aceitos: " + Arrays.toString(Categoria.values()));
+    }
+
+    // monta o produto a partir de uma linha com nome, preco e categoria
+    private Produto montarProduto(ResultSet rs) throws SQLException {
+        Produto produto = new Produto(null, 0, null);
+        produto.setNome(rs.getString("nome"));
+        produto.setPreco(rs.getDouble("preco"));
+        produto.setCategoria(lerCategoria(rs.getString("categoria")));
+        return produto;
+    }
+
     /** Produtos cadastrados na tela de produtos (alimenta o combo do pedido). */
     public List<Produto> listarProdutos() {
         List<Produto> lista = new ArrayList<>();
@@ -170,14 +196,10 @@ public class PedidoRepositorioBD {
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                Produto produto = new Produto();
-                produto.setNome(rs.getString("nome"));
-                produto.setPreco(rs.getDouble("preco"));
-                produto.setCategoria(Categoria.valueOf(rs.getString("categoria")));
-                lista.add(produto);
+                lista.add(montarProduto(rs));
             }
         } catch (SQLException erro) {
-            throw new RuntimeException("Erro ao listar produtos.", erro);
+            throw new RuntimeException("Erro ao listar produtos: " + erro.getMessage(), erro);
         }
         return lista;
     }
@@ -192,15 +214,12 @@ public class PedidoRepositorioBD {
             ps.setInt(1, idPedido);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Produto produto = new Produto();
-                    produto.setNome(rs.getString("nome"));
-                    produto.setPreco(rs.getDouble("preco"));
-                    produto.setCategoria(Categoria.valueOf(rs.getString("categoria")));
-                    produtos.add(produto);
+                    produtos.add(montarProduto(rs));
                 }
             }
         } catch (SQLException erro) {
-            throw new RuntimeException("Erro ao buscar produtos do pedido.", erro);
+            throw new RuntimeException("Erro ao buscar produtos do pedido " + idPedido
+                    + ": " + erro.getMessage(), erro);
         }
         return produtos;
     }
@@ -244,7 +263,7 @@ public class PedidoRepositorioBD {
                 }
             }
         } catch (SQLException erro) {
-            throw new RuntimeException("Erro ao listar pedidos.", erro);
+            throw new RuntimeException("Erro ao listar pedidos: " + erro.getMessage(), erro);
         }
         return lista;
     }
@@ -260,7 +279,7 @@ public class PedidoRepositorioBD {
                 totais.put(rs.getString("status_pedido"), rs.getInt("total"));
             }
         } catch (SQLException erro) {
-            throw new RuntimeException("Erro ao contar pedidos por status.", erro);
+            throw new RuntimeException("Erro ao contar pedidos por status: " + erro.getMessage(), erro);
         }
         return totais;
     }
@@ -274,7 +293,7 @@ public class PedidoRepositorioBD {
                 return rs.getInt(1);
             }
         } catch (SQLException erro) {
-            throw new RuntimeException("Erro ao contar pedidos.", erro);
+            throw new RuntimeException("Erro ao contar pedidos: " + erro.getMessage(), erro);
         }
         return 0;
     }
