@@ -15,12 +15,12 @@ CREATE TABLE IF NOT EXISTS Produto (
  
  create table if not exists Pedido (
  id_pedido int primary key auto_increment,
- id_produto int not null,
+ -- id_produto int not null,
   status_pedio ENUM('PEDIDO_RECEBIDO','PREPARANDO','FINALIZADO','PAGO', 'ENTREGUE','CANCELADO'),
  precoTotal DECIMAL(6,2) not null,
  tipo_pagamento ENUM('NA_ENTREGA','PIX','CARTAO'),
- horario datetime (6) not null,
- FOREIGN KEY(id_produto) references Produto (id)
+ horario datetime (6) not null
+ -- KEY(id_produto) references Produto (id)
 
  );
  
@@ -31,3 +31,4 @@ CREATE TABLE IF NOT EXISTS Produto (
     FOREIGN KEY (id_pedido)  REFERENCES pedido(id_pedido),
     FOREIGN KEY (id_produto) REFERENCES produto(id)
 );
+

@@ -10,10 +10,12 @@ import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import model.Categoria;
 import model.Produto;
 import model.ProdutoRepositorioBD;
 import view.JanelaProduto;
+
+import java.util.ArrayList;
+import model.Categoria;
 /**
  * CONTROLLER - PASSO 8 do roteiro.
  *
@@ -113,7 +115,7 @@ public class ProdutoController implements ActionListener, ListSelectionListener 
             atualizarTela(a.getId());
             this.view.mostrarStatus("Salvo: " + a.getNome());
         } catch (NumberFormatException ex) {
-            this.view.mostrarStatus("Peso invalido. Use numeros, ex.: 4.5");
+            this.view.mostrarStatus("Preço inválido. Use números, ex.: 4.50");
         }
     }
 
@@ -128,8 +130,16 @@ public class ProdutoController implements ActionListener, ListSelectionListener 
     private void atualizarTela(int idParaSelecionar) {
         this.recarregando = true;
         try {
-            String p = this.view.getProdutoSelecionado();
-            this.view.carregarCategorias(this.bd.listarCategorias(), p);
+        	String categoriaSelecionada = this.view.getCategoriaSelecionada();
+
+        	List<Categoria> categoriasBD = this.bd.listarCategorias();
+        	List<String> categorias = new ArrayList<>();
+
+        	for (Categoria categoria : categoriasBD) {
+        	    categorias.add(categoria.name());
+        	}
+
+        	this.view.carregarCategorias(categorias, categoriaSelecionada);
 
             List<Produto> lista = this.bd.listarFiltrado(
                     this.view.getCategoriaSelecionada(), this.view.getBusca());
@@ -145,56 +155,3 @@ public class ProdutoController implements ActionListener, ListSelectionListener 
 
     // (opcional) mantenha aqui o atualizarTelaAssincrono se quiser exemplo de SwingWorker
 }
-    
-//	@Override
-//	public void actionPerformed(ActionEvent e) {
-//		// == e nao equals: a pergunta e "e exatamente aquele objeto?".
-//		Object src = e.getSource();
-//		if (src == view.getBtnIrCadastro()) {
-//			view.mostrarCartao("cadastro");
-//		} else if (src == view.getBtnIrLista()) {
-//			view.mostrarCartao("lista");
-//			filtrar();
-//		} else if (src == view.getBtnFiltrar()) {
-//			filtrar();
-//		} else if (src == view.getBtnSalvar()) {
-//			salvar();
-//		}
-//	}
-//	
-//	private void filtrar() {
-//		Categoria c = view.getCategoriaFiltro();
-//		List<Produto> lista = (c == null)
-//				? repositorio.listarTodos()
-//				: repositorio.listarPorCategoria(c);
-//		view.carregarTabela(lista);
-//		view.mostrarStatus(lista.size() + " produto(s).");
-//	}
-//
-//	private void salvar() {
-//		double preco;
-//		try {
-//			preco = Double.parseDouble(view.getTxtPreco().getText().trim().replace(",", "."));
-//		} catch (NumberFormatException erro) {
-//			view.mostrarErro("O preço deve ser um número.");
-//			return;
-//		}
-//		Produto p = new Produto();
-//		p.setNome(view.getTxtNome().getText());
-//		p.setCategoria(view.getCategoriaCadastro());
-//		p.setPreco(preco);
-//		try {
-//			repositorio.selecionar(p);
-//		} catch (IllegalArgumentException erro) {
-//			view.mostrarErro(erro.getMessage());
-//			return;
-//		}
-//		view.mostrarMensagem("Cadastrado. Total: " + repositorio.contar());
-//		view.limparCampos();
-//	}
-//
-//	public void iniciarTela() {
-//		view.setVisible(true);
-//	}
-//	
-//}

@@ -31,14 +31,14 @@ public class ProdutoRepositorio {
 		}
 		return false;
 	}
-	
-	public List<Produto> listarTodos() {
-		 // devolve uma COPIA: ninguem altera a colecao interna por fora
-		 return new ArrayList<>(produtos);
-		 }
-		 public int contar() {
-		 return produtos.size();
-		 }
 
-		 
+	public List<Produto> listarTodos() {
+		// devolve uma COPIA: ninguem altera a colecao interna por fora
+		return new ArrayList<>(produtos);
+	}
+
+	public int contar() {
+		return produtos.size();
+	}
+
 }

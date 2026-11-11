@@ -16,6 +16,8 @@ import view.JanelaPedido;
 	 
 		 ProdutoRepositorioBD repositorio = new ProdutoRepositorioBD();
 		 JanelaProduto view = new JanelaProduto();
+		   ProdutoController controller = new ProdutoController(view, repositorio);
+	        view.setVisible(true);
 		// ProdutoController controller = new ProdutoController(repositorio, view);
 		//controller.iniciarTela();
 		 
