@@ -35,37 +35,27 @@ public class ProdutoRepositorioBD {
 		return DriverManager.getConnection(URL, USER, SENHA);
 	}
 
-	public void salvar(Produto p) {
-
-		String problema = p.validar();
-
-		if (problema != null) {
-			throw new IllegalArgumentException(problema);
-		}
-
-		if (existe(p.getNome(), p.getCategoria())) {
-			throw new IllegalArgumentException("Essa categoria já contém esse produto.");
-		}
-
-		String sql = "INSERT INTO Produto (nome, categoria, preco) " + "VALUES (?, ?, ?)";
-
+	public void salvar(Produto a) throws SQLException {
+		boolean novo = (a.getId() == 0);
+		String sql = novo ? "INSERT INTO animal (nome, categoria, preco) VALUES (?, ?, ?)"
+				: "UPDATE animal SET nome = ?, categoria = ?, preco = ?, WHERE id = ?";
 		try (Connection con = abrir();
 				PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+			ps.setString(1, a.getNome());
+			ps.setString(2, a.getCategoria().name());
+			ps.setDouble(3, a.getPreco());
 
-			ps.setString(1, p.getNome());
-			ps.setString(2, p.getCategoria().name());
-			ps.setDouble(3, p.getPreco());
-
-			ps.executeUpdate();
-
-			try (ResultSet rs = ps.getGeneratedKeys()) {
-				if (rs.next()) {
-					p.setId(rs.getInt(1));
+			if (novo) {
+				ps.executeUpdate();
+				try (ResultSet rs = ps.getGeneratedKeys()) {
+					if (rs.next()) {
+						a.setId(rs.getInt(1)); // devolve o id novo ao objeto
+					}
 				}
+			} else {
+				ps.setInt(5, a.getId());
+				ps.executeUpdate();
 			}
-
-		} catch (SQLException erro) {
-			throw new RuntimeException("Erro ao salvar produto: " + erro.getMessage(), erro);
 		}
 	}
 
@@ -112,54 +102,46 @@ public class ProdutoRepositorioBD {
 	 */
 	public List<Produto> listarFiltrado(String categoria, String trecho) {
 
-	    String sql = "SELECT id, nome, categoria, preco FROM produto "
-	               + "WHERE nome LIKE ? ";
+		String sql = "SELECT id, nome, categoria, preco FROM produto " + "WHERE nome LIKE ? ";
 
-	    boolean filtrarCategoria = categoria != null
-	            && !categoria.equals("(todas)")
-	            && !categoria.isEmpty();
+		boolean filtrarCategoria = categoria != null && !categoria.equals("(todas)") && !categoria.isEmpty();
 
-	    if (filtrarCategoria) {
-	        sql += "AND categoria = ? ";
-	    }
+		if (filtrarCategoria) {
+			sql += "AND categoria = ? ";
+		}
 
-	    sql += "ORDER BY nome";
+		sql += "ORDER BY nome";
 
-	    List<Produto> lista = new ArrayList<>();
+		List<Produto> lista = new ArrayList<>();
 
-	    try (Connection con = abrir();
-	         PreparedStatement ps = con.prepareStatement(sql)) {
+		try (Connection con = abrir(); PreparedStatement ps = con.prepareStatement(sql)) {
 
-	        ps.setString(1, "%" + trecho + "%");
+			ps.setString(1, "%" + trecho + "%");
 
-	        if (filtrarCategoria) {
-	            ps.setString(2, categoria);
-	        }
+			if (filtrarCategoria) {
+				ps.setString(2, categoria);
+			}
 
-	        try (ResultSet rs = ps.executeQuery()) {
+			try (ResultSet rs = ps.executeQuery()) {
 
-	            while (rs.next()) {
+				while (rs.next()) {
 
-	                Produto p = new Produto();
+					Produto p = new Produto();
 
-	                p.setId(rs.getInt("id"));
-	                p.setNome(rs.getString("nome"));
-	                p.setCategoria(
-	                    Categoria.valueOf(rs.getString("categoria"))
-	                );
-	                p.setPreco(rs.getDouble("preco"));
+					p.setId(rs.getInt("id"));
+					p.setNome(rs.getString("nome"));
+					p.setCategoria(Categoria.valueOf(rs.getString("categoria")));
+					p.setPreco(rs.getDouble("preco"));
 
-	                lista.add(p);
-	            }
-	        }
+					lista.add(p);
+				}
+			}
 
-	    } catch (SQLException erro) {
-	        throw new RuntimeException(
-	            "Erro ao listar produtos: " + erro.getMessage(), erro
-	        );
-	    }
+		} catch (SQLException erro) {
+			throw new RuntimeException("Erro ao listar produtos: " + erro.getMessage(), erro);
+		}
 
-	    return lista;
+		return lista;
 	}
 
 	public List<Categoria> listarCategorias() {
@@ -199,32 +181,29 @@ public class ProdutoRepositorioBD {
 			throw new RuntimeException("Erro ao contar: " + erro.getMessage(), erro);
 		}
 	}
-	
+
 	public Map<String, Integer> contarPorCategoria() {
 
-	    String sql = "SELECT categoria, COUNT(*) AS total "
-	               + "FROM produto GROUP BY categoria";
+		String sql = "SELECT categoria, COUNT(*) AS total " + "FROM produto GROUP BY categoria";
 
-	    Map<String, Integer> resumo = new LinkedHashMap<>();
+		Map<String, Integer> resumo = new LinkedHashMap<>();
 
-	    try (Connection con = abrir();
-	         PreparedStatement ps = con.prepareStatement(sql);
-	         ResultSet rs = ps.executeQuery()) {
+		try (Connection con = abrir();
+				PreparedStatement ps = con.prepareStatement(sql);
+				ResultSet rs = ps.executeQuery()) {
 
-	        while (rs.next()) {
-	            String categoria = rs.getString("categoria");
-	            int total = rs.getInt("total");
+			while (rs.next()) {
+				String categoria = rs.getString("categoria");
+				int total = rs.getInt("total");
 
-	            resumo.put(categoria, total);
-	        }
+				resumo.put(categoria, total);
+			}
 
-	    } catch (SQLException erro) {
-	        throw new RuntimeException(
-	            "Erro ao contar produtos por categoria: " + erro.getMessage(), erro
-	        );
-	    }
+		} catch (SQLException erro) {
+			throw new RuntimeException("Erro ao contar produtos por categoria: " + erro.getMessage(), erro);
+		}
 
-	    return resumo;
+		return resumo;
 	}
 
 	/** Teste de ambiente: rode ANTES de depurar qualquer botao. */
@@ -258,21 +237,18 @@ public class ProdutoRepositorioBD {
 		}
 		return lista;
 	}
-	
+
 	public void excluir(int idProduto) {
 
-	    String sql = "DELETE FROM produto WHERE id_produto = ?";
+		String sql = "DELETE FROM produto WHERE id_produto = ?";
 
-	    try (Connection con = abrir();
-	         PreparedStatement stmt = con.prepareStatement(sql)) {
+		try (Connection con = abrir(); PreparedStatement stmt = con.prepareStatement(sql)) {
 
-	        stmt.setInt(1, idProduto);
-	        stmt.executeUpdate();
+			stmt.setInt(1, idProduto);
+			stmt.executeUpdate();
 
-	    } catch (SQLException erro) {
-	        throw new RuntimeException(
-	            "Erro ao excluir produto: " + erro.getMessage(), erro
-	        );
-	    }
+		} catch (SQLException erro) {
+			throw new RuntimeException("Erro ao excluir produto: " + erro.getMessage(), erro);
+		}
 	}
 }
