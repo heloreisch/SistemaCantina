@@ -159,11 +159,16 @@ public class ProdutoController implements ActionListener, ListSelectionListener 
 	}
 
 	private void excluir() {
-		Produto a = this.view.getProdutoSelecionado();
-		if (a != null && this.view.confirmar("Excluir " + a.getNome() + "?")) {
-			this.bd.excluir(a.getId());
-			atualizarTela(0);
-		}
+	    Produto a = this.view.getProdutoSelecionado();
+	    if (a != null && this.view.confirmar("Excluir " + a.getNome() + "?")) {
+	        try {
+	            this.bd.excluir(a.getId());
+	        } catch (RuntimeException ex) {
+	            this.view.mostrarStatus("Não foi possível excluir (produto usado em pedido?).");
+	            return;
+	        }
+	        atualizarTela(0);
+	    }
 	}
 
 	/** O UNICO metodo que repovoa a tela. */

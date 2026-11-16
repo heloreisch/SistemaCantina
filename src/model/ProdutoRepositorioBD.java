@@ -35,27 +35,39 @@ public class ProdutoRepositorioBD {
 		return DriverManager.getConnection(URL, USER, SENHA);
 	}
 
-	public void salvar(Produto a) throws SQLException {
-		boolean novo = (a.getId() == 0);
-		String sql = novo ? "INSERT INTO animal (nome, categoria, preco) VALUES (?, ?, ?)"
-				: "UPDATE animal SET nome = ?, categoria = ?, preco = ?, WHERE id = ?";
-		try (Connection con = abrir();
-				PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-			ps.setString(1, a.getNome());
-			ps.setString(2, a.getCategoria().name());
-			ps.setDouble(3, a.getPreco());
+	public void salvar(Produto a) {
+	    boolean novo = (a.getId() == 0);
+	    String sql = novo
+	        ? "INSERT INTO produto (nome, categoria, preco) VALUES (?, ?, ?)"
+	        : "UPDATE produto SET nome = ?, categoria = ?, preco = ? WHERE id = ?";
+	    try (Connection con = abrir();
+	         PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+	        ps.setString(1, a.getNome());
+	        ps.setString(2, a.getCategoria().name());
+	        ps.setDouble(3, a.getPreco());
+	        if (novo) {
+	            ps.executeUpdate();
+	            try (ResultSet rs = ps.getGeneratedKeys()) {
+	                if (rs.next()) a.setId(rs.getInt(1));
+	            }
+	        } else {
+	            ps.setInt(4, a.getId());
+	            ps.executeUpdate();
+	        }
+	    } catch (SQLException erro) {
+	        throw new RuntimeException("Erro ao salvar produto: " + erro.getMessage(), erro);
+	    }
+	}
 
-			if (novo) {
-				ps.executeUpdate();
-				try (ResultSet rs = ps.getGeneratedKeys()) {
-					if (rs.next()) {
-						a.setId(rs.getInt(1)); // devolve o id novo ao objeto
-					}
-				}
-			} else {
-				ps.setInt(5, a.getId());
-				ps.executeUpdate();
-			}
+	public void excluir(int idProduto) {
+	    String sql = "DELETE FROM produto WHERE id = ?";
+	    try (Connection con = abrir(); PreparedStatement stmt = con.prepareStatement(sql)) {
+
+			stmt.setInt(1, idProduto);
+			stmt.executeUpdate();
+
+		} catch (SQLException erro) {
+			throw new RuntimeException("Erro ao excluir produto: " + erro.getMessage(), erro);
 		}
 	}
 
@@ -238,17 +250,4 @@ public class ProdutoRepositorioBD {
 		return lista;
 	}
 
-	public void excluir(int idProduto) {
-
-		String sql = "DELETE FROM produto WHERE id_produto = ?";
-
-		try (Connection con = abrir(); PreparedStatement stmt = con.prepareStatement(sql)) {
-
-			stmt.setInt(1, idProduto);
-			stmt.executeUpdate();
-
-		} catch (SQLException erro) {
-			throw new RuntimeException("Erro ao excluir produto: " + erro.getMessage(), erro);
-		}
-	}
 }
