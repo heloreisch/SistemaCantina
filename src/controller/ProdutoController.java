@@ -44,6 +44,13 @@ public class ProdutoController implements ActionListener, ListSelectionListener 
 		this.view.getBtnCancelar().addActionListener(this);
 		this.view.getCbCategoria().addActionListener(this);
 		this.view.getTabela().getSelectionModel().addListSelectionListener(this);
+		
+		// Itens do menu: o mesmo ouvinte (this) de sempre.
+		this.view.getMiLimpar().addActionListener(this);
+		this.view.getMiSair().addActionListener(this);
+		this.view.getMiManual().addActionListener(this);
+		this.view.getMiSobre().addActionListener(this);
+
 
 		// busca "ao digitar": cada tecla reinicia o relogio
 		this.esperaBusca = new Timer(300, e -> atualizarTela(idSelecionado()));
@@ -111,7 +118,15 @@ public class ProdutoController implements ActionListener, ListSelectionListener 
 		    atualizarDetalhe();
 		} else if (origem == this.view.getCbCategoria()) {
 			atualizarTela(idSelecionado());
-		}
+		}else if (origem == this.view.getMiLimpar()) {
+            // limparCampos();
+        } else if (origem == this.view.getMiSair()) {
+           // this.view.fechar();
+        } else if (origem == this.view.getMiManual()) {
+            this.view.mostrarManual();
+        } else if (origem == this.view.getMiSobre()) {
+            this.view.mostrarSobre();
+        }
 	}
 
 	private void entrarEdicao(Produto a) {

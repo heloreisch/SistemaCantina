@@ -2,11 +2,19 @@ package view;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
 import model.Categoria;
 import model.Produto;
+import model.Status;
+
+import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+
 
 /**
  * VIEW - a tela. PASSO 7 do roteiro.
@@ -49,31 +57,128 @@ public class JanelaProduto extends JFrame {
 
 	// SOUTH
 	private JLabel lblStatus = new JLabel(" Pronto.");
+	
+	// itens do menu
+    private JMenuItem miLimpar;
+    private JMenuItem miSair;
+    private JMenuItem miManual;
+    private JMenuItem miSobre;
 
 	public JanelaProduto() {
-		setTitle("Sistema da cantina");
-		setDefaultCloseOperation(EXIT_ON_CLOSE);
-		setSize(820, 470);
-		setMinimumSize(new Dimension(700, 380));
-		setLayout(new BorderLayout(6, 6));
+		setTitle("Sistema de Cantina - Produtos");
+        setDefaultCloseOperation(HIDE_ON_CLOSE);
+        setSize(1200, 560); // mais larga
+        setMinimumSize(new Dimension(1000, 500));
+        setLocationRelativeTo(null);
 
-		painelResumo.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
-		JPanel topo = new JPanel(new BorderLayout());
-		topo.add(criarBarraComandos(), BorderLayout.NORTH);
-		topo.add(painelResumo, BorderLayout.CENTER);
-		add(topo, BorderLayout.NORTH);
+        // icone da janela barra de titulo e de tarefas
+        ImageIcon icone = carregarIcone("/img/logoCantina.png", 32, 32);
+        if (icone != null) {
+            setIconImage(icone.getImage());
+        }
 
-		tabela.setRowHeight(22);
-		tabela.setAutoCreateRowSorter(true);
-		tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		add(new JScrollPane(tabela), BorderLayout.CENTER);
+        // painel raiz
+        JPanel raiz = new JPanel(new BorderLayout());
+        setContentPane(raiz);
+     
+        // painel com o layout principal da tela
+        JPanel conteudo = new JPanel(new BorderLayout(6, 6));
+        raiz.add(conteudo, BorderLayout.CENTER);
+        
+        JLabel lblLogo = new JLabel();
+        lblLogo.setHorizontalAlignment(SwingConstants.CENTER);
+        lblLogo.setBorder(new EmptyBorder(0, 10, 0, 10));
+        ImageIcon logo = carregarIcone("/img/logoCantina.png", 260, 140);
+        if (logo != null) {
+            lblLogo.setIcon(logo);
+        } else {
+            lblLogo.setText("Sistema de Cantina");
+        }
 
-		add(criarPainelDetalhe(), BorderLayout.EAST);
-		add(lblStatus, BorderLayout.SOUTH);
+        // comandos + resumo a esquerda e logo a direita
+        painelResumo.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
+        JPanel esquerda = new JPanel(new BorderLayout());
+        esquerda.add(criarBarraComandos(), BorderLayout.NORTH);
+        esquerda.add(painelResumo, BorderLayout.CENTER);
 
-		mostrarVazio();
-		atualizarBotoes(false, false);
+        JPanel topo = new JPanel(new BorderLayout());
+        topo.add(esquerda, BorderLayout.CENTER);
+        topo.add(lblLogo, BorderLayout.EAST);
+        conteudo.add(topo, BorderLayout.NORTH);
+
+        tabela.setRowHeight(22);
+        tabela.setAutoCreateRowSorter(true);
+        tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tabela.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
+            private static final long serialVersionUID = 1L;
+            @Override
+            protected void setValue(Object v) {
+                setText(v == null ? "" : String.format("R$ %.2f", (Double) v));
+                setHorizontalAlignment(SwingConstants.RIGHT);
+            }
+        });
+        conteudo.add(new JScrollPane(tabela), BorderLayout.CENTER);
+
+        conteudo.add(criarPainelDetalhe(), BorderLayout.EAST);
+        conteudo.add(lblStatus, BorderLayout.SOUTH);
+
+        mostrarVazio();
+        atualizarBotoes(false, false);
+        
+     // ---------- o menu ----------
+        setJMenuBar(criarMenu());
+
 	}
+	
+	/**
+	* Carrega uma imagem de dentro do projeto e ajusta ao tamanho pedido,
+	* mantendo a proporcao. Devolve null se o arquivo nao for encontrado.
+	*/
+	private ImageIcon carregarIcone(String caminho, int largura, int altura) {
+	URL url = JanelaProduto.class.getResource(caminho);
+	if (url == null) {
+	System.err.println("Imagem nao encontrada: " + caminho);
+	return null;
+	}
+	ImageIcon original = new ImageIcon(url);
+	double escala = Math.min((double) largura / original.getIconWidth(),
+	(double) altura / original.getIconHeight());
+	int w = (int) (original.getIconWidth() * escala);
+	int h = (int) (original.getIconHeight() * escala);
+	Image reduzida = original.getImage()
+	.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+	return new ImageIcon(reduzida);
+	}
+
+	
+	/** Monta a barra de menus: Arquivo e Ajuda. */
+    private JMenuBar criarMenu() {
+        JMenuBar barra = new JMenuBar();
+
+        // ---- menu Arquivo ----
+        JMenu menuArquivo = new JMenu("Arquivo");
+        menuArquivo.setMnemonic(KeyEvent.VK_A); // Alt+A abre o menu
+        miLimpar = new JMenuItem("Limpar campos");
+        miLimpar.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK));
+        menuArquivo.add(miLimpar);
+        menuArquivo.addSeparator(); // linha divisoria
+        miSair = new JMenuItem("Sair");
+        miSair.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
+        menuArquivo.add(miSair);
+
+        // ---- menu Ajuda ----
+        JMenu menuAjuda = new JMenu("Ajuda");
+        menuAjuda.setMnemonic(KeyEvent.VK_J);
+        miManual = new JMenuItem("Manual de uso");
+        miManual.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
+        menuAjuda.add(miManual);
+        miSobre = new JMenuItem("Sobre");
+        menuAjuda.add(miSobre);
+
+        barra.add(menuArquivo);
+        barra.add(menuAjuda);
+        return barra;
+    }
 
 	private JPanel criarBarraComandos() {
 		JPanel barra = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 6));
@@ -312,6 +417,7 @@ public class JanelaProduto extends JFrame {
 		tabela.clearSelection();
 	}
 
+
 	// getters usados pelo Controller
 	public JButton getBtnNovo() {
 		return btnNovo;
@@ -344,4 +450,19 @@ public class JanelaProduto extends JFrame {
 	public JTable getTabela() {
 		return tabela;
 	}
+
+	// ---- Grupo 1: entregar componentes ao Controller ----
+	public JMenuItem getMiLimpar() { return miLimpar; }
+	public JMenuItem getMiSair() { return miSair; }
+	public JMenuItem getMiManual() { return miManual; }
+	public JMenuItem getMiSobre() { return miSobre; }
+	// ---- Grupo 2: capacidades da propria tela ----
+	public void mostrarSobre() {
+	new JanelaSobre(this).setVisible(true);
+	}
+	public void mostrarManual() {
+	new JanelaManual(this).setVisible(true);
+	}
+
 }
+
