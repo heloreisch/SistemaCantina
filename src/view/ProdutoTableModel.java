@@ -16,7 +16,7 @@ import java.util.List;
 
 public class ProdutoTableModel extends AbstractTableModel {
 	private static final long serialVersionUID = 1L;
-	 private static final String[] COLUNAS = { "Nome", "Categoria", "Preço (R$)"};
+	 private static final String[] COLUNAS = { "ID", "Nome", "Categoria", "Preço (R$)"};
 	 // Atributo, e nao variavel local: o JTable consulta o modelo a cada
 	 // repintura da tela, e precisa encontrar os dados la.
 	 private List<Produto> dados = new ArrayList<>();
@@ -32,9 +32,10 @@ public class ProdutoTableModel extends AbstractTableModel {
 	 public Object getValueAt(int linha, int coluna) {
 	 Produto a = dados.get(linha);
 	 switch (coluna) {
-	 case 0: return a.getNome();
-	 case 1: return a.getCategoria();
-	 case 2: return a.getPreco();
+	 case 0: return a.getId();
+	 case 1: return a.getNome();
+	 case 2: return a.getCategoria();
+	 case 3: return a.getPreco();
 	 default: return "";
 	 }
 	 }
@@ -49,7 +50,11 @@ public class ProdutoTableModel extends AbstractTableModel {
 	 */
 	 @Override
 	 public Class<?> getColumnClass(int coluna) {
-	 return (coluna == 2) ? Double.class : String.class;
+	     switch (coluna) {
+	         case 0: return Integer.class; 
+	         case 3: return Double.class;   
+	         default: return String.class;
+	     }
 	 }
 	 @Override
 	 public boolean isCellEditable(int linha, int coluna) {

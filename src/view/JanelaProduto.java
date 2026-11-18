@@ -112,7 +112,7 @@ public class JanelaProduto extends JFrame {
         tabela.setRowHeight(22);
         tabela.setAutoCreateRowSorter(true);
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabela.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
+        tabela.getColumnModel().getColumn(3).setCellRenderer(new DefaultTableCellRenderer() {
             private static final long serialVersionUID = 1L;
             @Override
             protected void setValue(Object v) {
