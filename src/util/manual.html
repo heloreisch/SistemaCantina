@@ -9,18 +9,28 @@ th { background-color: #e3eedd; text-align: left; }
 </style>
 </head>
 <body>
-<h1>Manual de uso - Gerenciamento de Pedidos </h1>
+<h1>Manual de uso - Gerenciamento de Pedidos e Produtos </h1>
 <h2>1. Para que serve</h2>
 <p>O programa cadastra tanto produtos quanto pedidos da cantina do IFSC em um banco de dados
 MySQL. Para cada produto sao registrados o <b>nome</b>, o <b>preço</b>,
  <b>categoria</b>. Enquanto para cada pedido são registrados <b>Status do pedido</b>,<b>tipo de pagamento</b>, o <b>preço total do pedido</b>, </p>
 <h2>2. Cadastrar um produto</h2>
 <ol>
-<li>Preencha os quatro campos da tela.</li>
-<li>Clique em <b>Cadastrar</b>.</li>
-<li>Se tudo estiver correto, aparece a mensagem de confirmacao com o
-total de livros cadastrados, e os campos sao limpos.</li>
+<li>Clique em <b>Novo</b>.</li>
+<li>Preencha os três campos da tela.</li>
+<li>Se tudo estiver correto, o produto aparecerá na tela juntamente com os outros produtos cadastrados, e os campos sao limpos.</li>
 </ol>
+
+<h2>2. Cadastrar um pedido</h2>
+<ol>
+<li>Clique em <b>Novo</b>.</li>
+<li>Escolha os produtos do pedido.</li>
+<li>Preencha os três campos restantes da tela.</li>
+<li>Se tudo estiver correto, o pedido aparecerá na tela juntamente com os outros pedidos cadastrados, e os campos sao limpos.</li>
+</ol>
+
+
+
 <h2>3. Outras opcoes</h2>
 <ul>
 <li><b>Limpar</b> (ou Arquivo &gt; Limpar campos): esvazia todos os campos.</li>
@@ -30,10 +40,9 @@ total de livros cadastrados, e os campos sao limpos.</li>
 <h2>4. Mensagens de erro</h2>
 <table border="1" cellpadding="4" cellspacing="0">
 <tr><th>Mensagem</th><th>O que fazer</th></tr>
-<tr><td>Preencha o nome do livro.</td><td>Digite o nome no primeiro campo.</td></tr>
-<tr><td>Preencha o nome do autor.</td><td>Digite o autor.</td></tr>
-<tr><td>As paginas devem ser um numero inteiro valido.</td><td>Use apenas digitos, sem letras nem virgula.</td></tr>
-<tr><td>Copias deve ser maior que 0.</td><td>Informe pelo menos 1 copia.</td></tr>
+<tr><td>Adicione pelo menos um produto ao pedido.</td><td>Escolha um produto e adicione no pedido.</td>></tr>
+<tr><td>O preço total deve ser um numero válido.</td><td>Preencha um numero válido para o preço total ex: 12,50.</td></tr>
+
 </table>
 <h2>5. Atalhos de teclado</h2>
 <ul>
