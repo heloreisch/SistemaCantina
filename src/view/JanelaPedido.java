@@ -109,7 +109,11 @@ public class JanelaPedido extends JFrame {
             setIconImage(icone.getImage());
         }
 
-        // ---------- o menu ----------
+        colorir(btnNovo,    new Color(46, 125, 50));   // verde
+        colorir(btnExcluir, new Color(198, 40, 40));   // vermelho
+        
+        
+      // menu
         setJMenuBar(criarMenu());
 
         // painel raiz
@@ -558,6 +562,16 @@ public class JanelaPedido extends JFrame {
         // volta o filtro para todos
         cbFiltroStatus.setSelectedIndex(0);
         tabela.clearSelection();
+    }
+    
+   
+    // colorir os botoes
+    private void colorir(JButton botao, Color fundo) {
+        botao.setBackground(fundo);
+        botao.setForeground(Color.WHITE);
+        botao.setOpaque(true);
+        botao.setContentAreaFilled(true);
+        botao.setFocusPainted(false);
     }
 
     // ---- Grupo 1: getters usados pelo Controller ----

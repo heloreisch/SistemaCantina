@@ -15,6 +15,8 @@ import model.PedidoRepositorioBD;
 import model.Pedido;
 import model.Produto;
 import view.JanelaPedido;
+import model.ProdutoRepositorioBD;
+import view.JanelaProduto;
 
 /**
  * CONTROLLER - liga a tela (View) ao repositorio (Model).
@@ -99,9 +101,12 @@ public class PedidoController implements ActionListener, ListSelectionListener {
         } else if (origem == this.viewp.getBtnExcluir()) {
             excluir();
         } else if (origem == this.viewp.getBtnProdutos()) {
+            JanelaProduto viewProd = new JanelaProduto();
+            new ProdutoController(viewProd, new ProdutoRepositorioBD());
+            viewProd.setVisible(true);
+       
             // O combo de produtos ja e recarregado em entrarEdicao,
             // entao so abrir a tela de produtos.
-            this.viewp.mostrarProdutos();
         } else if (origem == this.viewp.getBtnSalvar()) {
             salvar();
         } else if (origem == this.viewp.getBtnCancelar()) {
@@ -124,6 +129,7 @@ public class PedidoController implements ActionListener, ListSelectionListener {
             this.viewp.mostrarSobre();
         }
     }
+
 
     /**
      * "Limpar campos": com o formulario aberto, esvazia o formulario;

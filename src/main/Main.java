@@ -14,13 +14,13 @@ import view.JanelaPedido;
 	public class Main {
 		public static void main(String[] args) {
 	 
-		 ProdutoRepositorioBD repositorio = new ProdutoRepositorioBD();
+	/*	 ProdutoRepositorioBD repositorio = new ProdutoRepositorioBD();
 		 JanelaProduto view = new JanelaProduto();
 		   ProdutoController controller = new ProdutoController(view, repositorio);
 	        view.setVisible(true);
 		// ProdutoController controller = new ProdutoController(repositorio, view);
 		//controller.iniciarTela();
-		 
+		 */
 		 //pedido
 		 PedidoRepositorioBD repositoriop = new PedidoRepositorioBD();
 		 JanelaPedido viewp = new JanelaPedido();

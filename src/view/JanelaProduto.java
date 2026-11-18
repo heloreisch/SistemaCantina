@@ -94,6 +94,9 @@ public class JanelaProduto extends JFrame {
         } else {
             lblLogo.setText("Sistema de Cantina");
         }
+        
+        colorir(btnNovo,    new Color(46, 125, 50));   // verde
+        colorir(btnExcluir, new Color(198, 40, 40));   // vermelho
 
         // comandos + resumo a esquerda e logo a direita
         painelResumo.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
@@ -450,6 +453,16 @@ public class JanelaProduto extends JFrame {
 	public JTable getTabela() {
 		return tabela;
 	}
+	
+	 // colorir os botoes
+    private void colorir(JButton botao, Color fundo) {
+        botao.setBackground(fundo);
+        botao.setForeground(Color.WHITE);
+        botao.setOpaque(true);
+        botao.setContentAreaFilled(true);
+        botao.setFocusPainted(false);
+    }
+
 
 	// ---- Grupo 1: entregar componentes ao Controller ----
 	public JMenuItem getMiLimpar() { return miLimpar; }

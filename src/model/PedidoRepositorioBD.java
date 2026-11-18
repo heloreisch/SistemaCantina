@@ -51,14 +51,14 @@ public class PedidoRepositorioBD {
         }
         	
         //add pedido
-        String sql = "INSERT INTO pedido (produtos, preco_total, status_pedido, tipo_pagamento) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO pedido ( preco_total, status_pedido, tipo_pagamento) VALUES (?, ?, ?)";
         try (Connection con = abrir();
              PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-            ps.setString(1, resumo(pedido.getProdutos()));
-            ps.setDouble(2, pedido.getPrecoTotal());
-            ps.setString(3, pedido.getStatus_pedido().name());
-            ps.setString(4, pedido.getTipo_pagamento().name());
+            ps.setDouble(1, pedido.getPrecoTotal());
+            ps.setString(2, pedido.getStatus_pedido().name());
+            ps.setString(3, pedido.getTipo_pagamento().name());
+            
             ps.executeUpdate();
 
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -79,17 +79,16 @@ public class PedidoRepositorioBD {
             throw new IllegalArgumentException(problema);
         }
 
-        String sql = "UPDATE pedido SET produtos = ?, preco_total = ?, status_pedido = ?, tipo_pagamento = ? "
+        String sql = "UPDATE pedido SET preco_total = ?, status_pedido = ?, tipo_pagamento = ? "
                    + "WHERE id_pedido = ? AND status_pedido <> 'FINALIZADO'";
         try (Connection con = abrir();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setString(1, resumo(pedido.getProdutos()));
-            ps.setDouble(2, pedido.getPrecoTotal());
-            ps.setString(3, pedido.getStatus_pedido().name());
-            ps.setString(4, pedido.getTipo_pagamento().name());
-            ps.setInt(5, pedido.getIdPedido());
-
+            ps.setDouble(1, pedido.getPrecoTotal());
+            ps.setString(2, pedido.getStatus_pedido().name());
+            ps.setString(3, pedido.getTipo_pagamento().name());
+            ps.setInt(4, pedido.getIdPedido());
+            
             int linhasAlteradas = ps.executeUpdate();
             if (linhasAlteradas == 0) {
                 if (estaFinalizado(pedido.getIdPedido())) {
@@ -245,7 +244,10 @@ public class PedidoRepositorioBD {
      */
     public List<Pedido> listarFiltrado(Status status, String trecho) {
         String sql = "SELECT id_pedido, preco_total, status_pedido, tipo_pagamento FROM pedido "
-                   + "WHERE (CAST(id_pedido AS CHAR) LIKE ? OR produtos LIKE ?) "
+                   + "WHERE (CAST(id_pedido AS CHAR) LIKE ? "
+                   + "OR EXISTS (SELECT 1 FROM item_pedido ip "
+                   + "           INNER JOIN produto p ON p.id = ip.id_produto "
+                   + "           WHERE ip.id_pedido = pedido.id_pedido AND p.nome LIKE ?)) "
                    + (status == null ? "" : "AND status_pedido = ? ")
                    + "ORDER BY id_pedido";
         List<Pedido> lista = new ArrayList<>();
@@ -256,6 +258,7 @@ public class PedidoRepositorioBD {
             ps.setString(2, like);
             if (status != null) {
                 ps.setString(3, status.name());
+           
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
