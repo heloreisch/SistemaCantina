@@ -397,7 +397,27 @@ public class JanelaProduto extends JFrame {
 		if (carregando)
 			mostrarStatus("Carregando...");
 	}
-
+	public void limparFormulario() {
+		txtNome.setText("");
+        txtPreco.setText("");
+        txtBusca.setText("");
+        cbFiltroCategoria.setSelectedIndex(-1);
+        cbCategoriaCadastro.setSelectedIndex(-1);
+        
+    }
+	
+	public void limparSelecao() {
+		tabela.clearSelection();
+	}
+	
+	public void limparBusca() {
+        txtBusca.setText("");
+        cbFiltroCategoria.setSelectedIndex(0);
+        tabela.clearSelection();
+    }
+	
+    public void fechar() { dispose(); }
+    
 	public void mostrarStatus(String texto) {
 		lblStatus.setText(" " + texto);
 	}
@@ -414,10 +434,6 @@ public class JanelaProduto extends JFrame {
 	public boolean confirmar(String pergunta) {
 		return JOptionPane.showConfirmDialog(this, pergunta, "Confirmar",
 				JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
-	}
-
-	public void limparSelecao() {
-		tabela.clearSelection();
 	}
 
 
@@ -469,6 +485,7 @@ public class JanelaProduto extends JFrame {
 	public JMenuItem getMiSair() { return miSair; }
 	public JMenuItem getMiManual() { return miManual; }
 	public JMenuItem getMiSobre() { return miSobre; }
+	
 	// ---- Grupo 2: capacidades da propria tela ----
 	public void mostrarSobre() {
 	new JanelaSobre(this).setVisible(true);
@@ -476,6 +493,8 @@ public class JanelaProduto extends JFrame {
 	public void mostrarManual() {
 	new JanelaManual(this).setVisible(true);
 	}
+	
+	
 
 }
 

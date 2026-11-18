@@ -119,15 +119,34 @@ public class ProdutoController implements ActionListener, ListSelectionListener 
 		} else if (origem == this.view.getCbCategoria()) {
 			atualizarTela(idSelecionado());
 		}else if (origem == this.view.getMiLimpar()) {
-            // limparCampos();
+            limparCampos();
         } else if (origem == this.view.getMiSair()) {
-           // this.view.fechar();
+        	this.view.fechar();
         } else if (origem == this.view.getMiManual()) {
             this.view.mostrarManual();
         } else if (origem == this.view.getMiSobre()) {
             this.view.mostrarSobre();
         }
 	}
+	
+	 /**
+     * "Limpar campos": com o formulario aberto, esvazia o formulario;
+     * fora da edicao, limpa a busca e o filtro de status.
+     */
+    private void limparCampos() {
+        if (this.editando) {
+            this.view.limparFormulario();
+            return;
+        }
+        // recarregando = true -> a mudanca dos campos nao ""faz"" varias atualizacoes
+        this.recarregando = true;
+        try {
+            this.view.limparBusca();
+        } finally {
+            this.recarregando = false;
+        }
+        atualizarTela(idSelecionado());
+    }
 
 	private void entrarEdicao(Produto a) {
 		this.editando = true;
