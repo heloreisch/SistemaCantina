@@ -85,6 +85,11 @@ public class ProdutoController implements ActionListener, ListSelectionListener 
 	}
 
 	private void atualizarDetalhe() {
+		if (this.editando) {
+	        // nao troca o cartao: o formulario continua aberto
+	        this.view.atualizarBotoes(idSelecionado() != 0, true);
+	        return;
+	    }
 		Produto a = this.view.getProdutoSelecionado();
 		if (a == null)
 			this.view.mostrarVazio();
